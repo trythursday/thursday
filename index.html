@@ -131,6 +131,11 @@
       min-height: 30ch;
       font-size: var(--size-body);
     }
+    .cost-line {
+      margin: 0.25rem;
+      font-size: var(--size-body);
+      color: var(--accent);
+    }
   </style>
 </head>
 <body>
@@ -154,6 +159,7 @@
             </label>
           </div>
         </form>
+        <p class="cost-line">Last expansion cost: —</p>
         <details class="debug-panel">
           <summary>System prompt</summary>
           <textarea class="system-prompt"></textarea>
@@ -168,6 +174,10 @@
     import { marked } from "https://esm.sh/marked";
     import { OpenRouter } from "https://esm.sh/@openrouter/sdk";
 
+    // OpenRouter reports usage.cost in USD. Six decimals keeps a sub-cent
+    // expansion readable.
+    const formatCost = (usd) => (typeof usd === "number" ? `$${usd.toFixed(6)}` : "—");
+
     document.addEventListener("DOMContentLoaded", async () => {
       const form = document.querySelector(".input-form");
       const textarea = form.querySelector("textarea");
@@ -176,6 +186,7 @@
       const systemPrompt = document.querySelector(".system-prompt");
       const rawCheckbox = document.querySelector(".raw-checkbox");
       const apiKey = document.querySelector(".api-key");
+      const costLine = document.querySelector(".cost-line");
 
       apiKey.value = localStorage.getItem("openrouter-api-key") ?? "";
       apiKey.addEventListener("change", () => {
@@ -216,6 +227,14 @@
           });
           lastResponse = completion.choices[0].message.content;
           render();
+
+          const usage = completion.usage ?? {};
+          console.log("[idea-expander] usage", usage);
+          console.log(`[idea-expander] cost ${formatCost(usage.cost)}`, {
+            promptTokens: usage.promptTokens,
+            completionTokens: usage.completionTokens,
+          });
+          costLine.textContent = `Last expansion cost: ${formatCost(usage.cost)}`;
         } finally {
           expandButton.disabled = false;
           expandButton.textContent = "Expand";
