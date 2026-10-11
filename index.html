@@ -1,246 +1,47 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Idea Expander</title>
-  <style>
-    :root {
-      --fg: #151515;
-      --bg: #f5f4f0;
-      --accent: #777;
-      --size-body: 1rem;
-      --size-section: 1.2rem;
-      --size-heading: 1.4rem;
-    }
-    @media (prefers-color-scheme: dark) {
+  <!--
+    thursday-name: Landing page
+    thursday-revisit-before: 2026-10-18 2200
+  -->
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thursday</title>
+    <link rel="stylesheet" href="./fieber.css" />
+    <!--
+        tool: https://dohliam.github.io/dropin-minimal-css/
+        revisit: 2026-11-12
+    -->
+
+    <style>
       :root {
-        --fg: #f5f4f0;
-        --bg: #151515;
+        --f-body: "Inter", sans-serif;
       }
-    }
-    body {
-      display: grid;
-      place-items: center;
-      line-height: 1.6;
-      color: var(--fg);
-      background: var(--bg);
-    }
-    html,
-    body,
-    #root,
-    .io-wrapper {
-      height: 100%;
-    }
-    textarea,
-    button,
-    input {
-      border-radius: 0.4rem;
-      font-size: var(--size-body);
-      margin: 0.25rem;
-      padding: 0.4rem;
-      border: 2px solid var(--accent);
-      color: var(--fg);
-      background: var(--bg);
-    }
-    button {
-      cursor: pointer;
-    }
-    textarea:focus,
-    button:hover,
-    button:focus,
-    button:active,
-    input:focus {
-      border-color: currentColor;
-    }
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    textarea {
-      margin: 0;
-      font-size: var(--size-section);
-      min-height: 20ch;
-      resize: vertical;
-    }
-    .body-main {
-      max-width: 80ch;
-      width: 100%;
-    }
-    .io-wrapper {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-    }
-    .input-form {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      gap: 1rem;
-    }
-    .input-group {
-      display: flex;
-      justify-content: space-between;
-    }
-    .submit-group {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: auto;
-    }
-    .input-panel,
-    .output-panel {
-      min-height: 50ch;
-      margin: 1rem 0;
-    }
-    .input-panel {
-      display: flex;
-      flex-direction: column;
-    }
-    .output-panel {
-      border: 1px dashed red;
-      border-radius: 0.4rem;
-      margin-top: 0;
-      overflow: scroll;
-    }
-    .output-content {
-      font-size: var(--size-body);
-    }
-    .output-content h1,
-    .output-content h2,
-    .output-content h3 {
-      font-size: var(--size-heading);
-    }
-    .output-content code,
-    .output-content pre {
-      font-size: var(--size-body);
-    }
-    .debug-panel summary {
-      cursor: pointer;
-    }
-    .raw-toggle {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      margin: 0.25rem;
-    }
-    .raw-toggle input {
-      margin: 0;
-    }
-    .system-prompt {
-      width: 100%;
-      min-height: 30ch;
-      font-size: var(--size-body);
-    }
-    .cost-line {
-      margin: 0.25rem;
-      font-size: var(--size-body);
-      color: var(--accent);
-    }
-  </style>
-</head>
-<body>
-  <div class="body-main" id="root">
-    <div class="io-wrapper">
-      <div class="input-panel">
-        <h1>Idea Expander</h1>
-        <div class="input-group key-group">
-          <label for="api-key">OpenRouter API key</label>
-          <input type="password" id="api-key" class="api-key" placeholder="sk-or-v1-…" />
-        </div>
-        <p>Put in your thoughts below, then click <code>Go</code> to expand the idea, or carry out your specified task.</p>
-        <form class="input-form">
-          <textarea placeholder="Type anything here, then press expand."></textarea>
-          <div class="input-group submit-group">
-            <button type="submit">Expand</button>
-            <button type="button" disabled>Save</button>
-            <label class="raw-toggle">
-              <input type="checkbox" class="raw-checkbox" />
-              Raw
-            </label>
-          </div>
-        </form>
-        <p class="cost-line">Last expansion cost: —</p>
-        <details class="debug-panel">
-          <summary>System prompt</summary>
-          <textarea class="system-prompt"></textarea>
-        </details>
-      </div>
-      <div class="output-panel">
-        <div class="output-content"></div>
-      </div>
-    </div>
-  </div>
-  <script type="module">
-    import { marked } from "https://esm.sh/marked";
-    import { OpenRouter } from "https://esm.sh/@openrouter/sdk";
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Thursday</h1>
+    </header>
 
-    // OpenRouter reports usage.cost in USD. Six decimals keeps a sub-cent
-    // expansion readable.
-    const formatCost = (usd) => (typeof usd === "number" ? `$${usd.toFixed(6)}` : "—");
+    <p>A set of ideas</p>
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      const form = document.querySelector(".input-form");
-      const textarea = form.querySelector("textarea");
-      const output = document.querySelector(".output-content");
-      const expandButton = form.querySelector("button[type='submit']");
-      const systemPrompt = document.querySelector(".system-prompt");
-      const rawCheckbox = document.querySelector(".raw-checkbox");
-      const apiKey = document.querySelector(".api-key");
-      const costLine = document.querySelector(".cost-line");
+    <ul>
+      <li>to help people</li>
+      <li>build systems</li>
+      <li>to achieve</li>
+      <li>their own</li>
+      <li>goals</li>
+      <li>safely</li>
+    </ul>
 
-      apiKey.value = localStorage.getItem("openrouter-api-key") ?? "";
-      apiKey.addEventListener("change", () => {
-        localStorage.setItem("openrouter-api-key", apiKey.value);
-      });
+    <p>Try the <a href="/experiments/idea-expander">Idea Expander</a> now.</p>
 
-      let lastResponse = "";
+    <p>Check back on 2026-10-18 if that was interesting.</p>
 
-      const render = () => {
-        if (!lastResponse) return;
-        output.innerHTML = rawCheckbox.checked
-          ? `<pre>${lastResponse.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</pre>`
-          : marked.parse(lastResponse);
-      };
+    <p><a href="https://github.com/trythursday/thursday">GitHub</a></p>
 
-      rawCheckbox.addEventListener("change", render);
-
-      systemPrompt.value = await (await fetch("./SYSTEM_PROMPT.md")).text();
-
-      form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        expandButton.disabled = true;
-        expandButton.textContent = "Expanding...";
-        try {
-          const openrouter = new OpenRouter({ apiKey: apiKey.value });
-          const completion = await openrouter.chat.send({
-            chatRequest: {
-              model: "xiaomi/mimo-v2.6-flash",
-              messages: [
-                { role: "system", content: systemPrompt.value },
-                { role: "user", content: textarea.value },
-              ],
-              provider: {
-                only: ["makora/fp8"],
-                allow_fallbacks: false,
-              },
-            },
-          });
-          lastResponse = completion.choices[0].message.content;
-          render();
-
-          const usage = completion.usage ?? {};
-          console.log("[idea-expander] usage", usage);
-          console.log(`[idea-expander] cost ${formatCost(usage.cost)}`, {
-            promptTokens: usage.promptTokens,
-            completionTokens: usage.completionTokens,
-          });
-          costLine.textContent = `Last expansion cost: ${formatCost(usage.cost)}`;
-        } finally {
-          expandButton.disabled = false;
-          expandButton.textContent = "Expand";
-        }
-      });
-    });
-  </script>
-</body>
+    <p>You can close this now.</p>
+  </body>
 </html>

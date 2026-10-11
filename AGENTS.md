@@ -1,0 +1,1 @@
+Skill: github @trythursday/thursday
