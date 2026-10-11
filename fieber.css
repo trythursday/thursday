@@ -10,7 +10,7 @@
   color-scheme: light dark;
 
   --f-sans: ui-sans-serif, sans-serif;
-  --f-body: ui-serif;
+  --f-body: "Inter", sans-serif;
   --f-heading: var(--f-sans);
   --f-form: var(--f-sans);
   --f-code: ui-monospace;
@@ -951,16 +951,16 @@ dialog > *:last-child {
 
 @media screen {
   body > header {
-    margin-block-end: 4em;
+    margin-block-end: 2em;
   }
 
   main > :where(section, article),
   body > footer {
-    margin-block-start: 4em;
+    margin-block-start: 2em;
     clear: both;
   }
 
   body > footer {
-    margin-block-start: 4em;
+    margin-block-start: 2em;
   }
 }
