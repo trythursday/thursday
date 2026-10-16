@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: MIT
    SPDX-FileCopyrightText: Copyright (c) 2022-2025 zichy
+   SPDX-FileCopyrightText: Copyright (c) 2026- Siddharth Singh and Thursday contributors
 */
 
 /* Custom properties
@@ -23,6 +24,9 @@
   --c-gray: #666;
   --c-red: #b30;
   --c-yellow: #fe9;
+  --c-fg: #202020;
+  --c-bg: #fcfcfc;
+  --c-tag-bg: #e4e4e4;
 
   --i-triangle: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"%3E%3Cpolygon fill="black" points="5 10 10 0 0 0"/%3E%3C/svg%3E');
 
@@ -36,11 +40,13 @@
     --c-gray: #999;
     --c-red: #f99;
     --c-yellow: #ff9;
+    --c-fg: #f5f4f0;
+    --c-bg: #101010;
+    --c-tag-bg: #444444;
 
     --i-triangle: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"%3E%3Cpolygon fill="white" points="5 10 10 0 0 0"/%3E%3C/svg%3E');
   }
 }
-
 
 /* Globals
 ========================================
@@ -106,7 +112,6 @@ html {
   margin: 15mm 20mm;
 }
 
-
 /* Body
 ========================================
 */
@@ -114,8 +119,8 @@ html {
 /* Colors & Typography */
 
 body {
-  background-color: Canvas;
-  color: CanvasText;
+  background-color: var(--c-bg);
+  color: var(--c-fg);
   font-size: var(--f-size);
   font-family: var(--f-body);
   line-height: var(--f-line);
@@ -143,7 +148,6 @@ body {
   }
 }
 
-
 /* Links
 ========================================
 */
@@ -162,12 +166,11 @@ a:any-link:hover {
 
 @media print {
   a[href^="http"]::after {
-    content: ' ('attr(href)')';
+    content: " (" attr(href) ")";
     font-size: var(--f-size-small);
     word-break: break-all;
   }
 }
-
 
 /* Media
 ========================================
@@ -199,7 +202,7 @@ img {
 }
 
 img::before {
-  content: '';
+  content: "";
   background-color: Highlight;
   width: 100%;
   height: 100%;
@@ -227,7 +230,6 @@ iframe {
   border-style: none;
 }
 
-
 /* Headings
 ========================================
 */
@@ -250,7 +252,6 @@ iframe {
   background-color: var(--c-yellow);
   color: MarkText;
 }
-
 
 /* Lists
 ========================================
@@ -293,7 +294,6 @@ nav ul {
     display: none;
   }
 }
-
 
 /* Inline elements
 ========================================
@@ -354,7 +354,6 @@ kbd {
   box-shadow: 1px 1px 1px 0px var(--c-gray);
 }
 
-
 /* Ruby annotation
 ========================================
 */
@@ -366,18 +365,16 @@ rt {
   padding: 0 0.25em;
 }
 
-
 /* Horizontal rule
 ========================================
 */
 
 hr {
   height: 0;
-  margin: 2em 0;
+  margin: 1rem 0;
   border: 0;
   border-top: 2px solid var(--c-gray);
 }
-
 
 /* Blockquote
 ========================================
@@ -398,7 +395,6 @@ blockquote > *:last-child {
   margin-block-end: 0;
 }
 
-
 /* Captions
 ========================================
 */
@@ -416,10 +412,9 @@ caption {
   caption-side: bottom;
 }
 
-[dir='rtl' i] caption {
+[dir="rtl" i] caption {
   text-align: right;
 }
-
 
 /* Code
 ========================================
@@ -452,7 +447,6 @@ pre code {
   white-space: pre-wrap;
   padding: 0;
 }
-
 
 /* Details
 ========================================
@@ -488,7 +482,6 @@ details[open] summary {
   margin-block-end: 2rem;
 }
 
-
 /* Aside
 ========================================
 */
@@ -514,7 +507,6 @@ aside {
     margin-block-end: 0;
   }
 }
-
 
 /* Table
 ========================================
@@ -564,10 +556,9 @@ th {
   vertical-align: bottom;
 }
 
-[dir='rtl' i] th {
+[dir="rtl" i] th {
   text-align: right;
 }
-
 
 /* Forms & Inputs
 ========================================
@@ -587,7 +578,13 @@ th {
   border-radius: 0.5rem;
 }
 
-:where(input:not([type='button' i]):not([type='submit' i]):not([type='reset' i]):not([type='checkbox' i]):not([type='radio' i]):not([type='image' i]), textarea, select) {
+:where(
+  input:not([type="button" i]):not([type="submit" i]):not([type="reset" i]):not(
+      [type="checkbox" i]
+    ):not([type="radio" i]):not([type="image" i]),
+  textarea,
+  select
+) {
   color: CanvasText;
   font-size: var(--f-size-small);
   display: block;
@@ -636,7 +633,7 @@ textarea {
 
 /* Checkbox & Radio input */
 
-label:has([type='checkbox' i], [type='radio' i]) {
+label:has([type="checkbox" i], [type="radio" i]) {
   font-family: var(--f-form);
   font-size: var(--f-size-small);
   font-weight: normal;
@@ -646,11 +643,11 @@ label:has([type='checkbox' i], [type='radio' i]) {
   padding-block-end: 0;
 }
 
-label:has([type='checkbox' i][disabled], [type='radio' i][disabled]) {
+label:has([type="checkbox" i][disabled], [type="radio" i][disabled]) {
   color: var(--c-gray);
 }
 
-:where([type='checkbox' i], [type='radio' i]) {
+:where([type="checkbox" i], [type="radio" i]) {
   width: 1.25em;
   height: 1.25em;
   position: relative;
@@ -659,16 +656,16 @@ label:has([type='checkbox' i][disabled], [type='radio' i][disabled]) {
   cursor: pointer;
 }
 
-[type='radio' i] {
+[type="radio" i] {
   border-radius: 50%;
 }
 
-:where([type='checkbox' i], [type='radio' i]):checked {
+:where([type="checkbox" i], [type="radio" i]):checked {
   background-color: LinkText;
 }
 
-[type='checkbox' i]:checked::after {
-  content: '\2713';
+[type="checkbox" i]:checked::after {
+  content: "\2713";
   color: Canvas;
   font-family: var(--f-form);
   font-weight: bold;
@@ -681,7 +678,7 @@ label:has([type='checkbox' i][disabled], [type='radio' i][disabled]) {
 
 /* Color input */
 
-[type='color' i] {
+[type="color" i] {
   height: 4rem;
   padding: 0.5rem;
   cursor: pointer;
@@ -701,13 +698,13 @@ label:has([type='checkbox' i][disabled], [type='radio' i][disabled]) {
 
 /* Range input */
 
-[type='range' i] {
+[type="range" i] {
   margin: 1.25rem 0 0;
   padding: 0;
   border: 0;
 }
 
-[type='range' i]:focus {
+[type="range" i]:focus {
   outline: none;
 }
 
@@ -747,7 +744,7 @@ label:has([type='checkbox' i][disabled], [type='radio' i][disabled]) {
   border-color: var(--c-gray);
 }
 
-[type='range' i]:focus::-webkit-slider-thumb {
+[type="range" i]:focus::-webkit-slider-thumb {
   outline: 2px solid LinkText;
   outline-offset: 0.25rem;
 }
@@ -767,7 +764,7 @@ label:has([type='checkbox' i][disabled], [type='radio' i][disabled]) {
   border-color: var(--c-gray);
 }
 
-[type='range' i]:focus::-moz-range-thumb {
+[type="range" i]:focus::-moz-range-thumb {
   outline: 2px solid LinkText;
   outline-offset: 0.25rem;
 }
@@ -775,7 +772,8 @@ label:has([type='checkbox' i][disabled], [type='radio' i][disabled]) {
 /* Select */
 
 select {
-  background: Canvas var(--i-triangle) no-repeat calc(100% - 1rem) center / 1.5rem;
+  background: Canvas var(--i-triangle) no-repeat calc(100% - 1rem) center /
+    1.5rem;
   text-overflow: ellipsis;
   white-space: nowrap;
   padding-inline-end: 3.5rem;
@@ -783,7 +781,7 @@ select {
   cursor: pointer;
 }
 
-[dir='rtl' i] select {
+[dir="rtl" i] select {
   background-position: 1rem center;
   padding-inline: 3.5rem 1rem;
 }
@@ -795,7 +793,7 @@ select[multiple] {
 
 /* Buttons */
 
-:where(button, [type='button' i], [type='submit' i], [type='reset' i]) {
+:where(button, [type="button" i], [type="submit" i], [type="reset" i]) {
   font-size: var(--f-size-small);
   font-weight: bold;
   text-align: center;
@@ -811,23 +809,33 @@ select[multiple] {
   touch-action: manipulation;
 }
 
-:where(button:not([disabled]), [type='button' i]:not([disabled]), [type='submit' i]:not([disabled]), [type='reset' i]:not([disabled])):hover {
+:where(
+  button:not([disabled]),
+  [type="button" i]:not([disabled]),
+  [type="submit" i]:not([disabled]),
+  [type="reset" i]:not([disabled])
+):hover {
   text-decoration: underline;
 }
 
 @media screen {
-  :where(button, [type='button' i], [type='submit' i], [type='reset' i]) {
+  :where(button, [type="button" i], [type="submit" i], [type="reset" i]) {
     background-color: LinkText;
     color: Canvas;
   }
 
-  :where(button[disabled], [type='button' i][disabled], [type='submit' i][disabled], [type='reset' i][disabled]) {
+  :where(
+    button[disabled],
+    [type="button" i][disabled],
+    [type="submit" i][disabled],
+    [type="reset" i][disabled]
+  ) {
     background-color: var(--c-gray);
     color: currentColor;
   }
 }
 
-form :where(button, [type='button' i], [type='submit' i], [type='reset' i]) {
+form :where(button, [type="button" i], [type="submit" i], [type="reset" i]) {
   padding: 1rem 1.5rem;
 }
 
@@ -908,10 +916,9 @@ form p[id]:has(+ input) {
   outline-color: var(--c-red);
 }
 
- p[id]:has(+ [aria-invalid]) {
+p[id]:has(+ [aria-invalid]) {
   color: var(--c-red);
 }
-
 
 /* Dialog
 ========================================
@@ -944,7 +951,6 @@ dialog > *:last-child {
   margin-block-end: 0;
 }
 
-
 /* Opinionated layout
 ========================================
 */
@@ -956,11 +962,44 @@ dialog > *:last-child {
 
   main > :where(section, article),
   body > footer {
-    margin-block-start: 2em;
+    margin-block-start: 4rem;
     clear: both;
   }
 
   body > footer {
-    margin-block-start: 2em;
+    margin-block-start: 4rem;
   }
+}
+
+
+/* Utilities
+========================================
+*/
+
+.muted {
+  font-size: 1.4rem;
+  color: var(--c-gray);
+  font-weight: bold;
+}
+
+a.muted {
+  color: var(--c-gray);
+}
+
+.tag-row {
+  display: flex;
+  gap: 1rem;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.tag {
+  flex: none;
+  background-color: var(--c-tag-bg);
+  border-radius: 0.4rem;
+  padding: 0.2rem;
+}
+
+.tag::before {
+  content: "#";
 }
