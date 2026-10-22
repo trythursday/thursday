@@ -191,6 +191,10 @@
         </section>
       </main>
 
+      <p>
+        <a href="#" id="clear-settings">Clear AI settings</a>
+      </p>
+
       <footer>
         <hr />
         <p>
@@ -203,7 +207,7 @@
     <script type="module" src="./lib/ai-setup.js"></script>
     <script type="module">
       import { generate } from "./lib/ai.js";
-      import { getApiKey } from "./lib/storage.js";
+      import { getApiKey, clearStorage } from "./lib/storage.js";
 
       const setup = document.querySelector("ai-setup");
       const root = document.querySelector("#root");
@@ -292,7 +296,10 @@
             },
           });
         } catch (error) {
-          output.textContent = error.message;
+          output.textContent =
+            error?.status === 401
+              ? "Try again tomorrow or clearing the AI settings."
+              : error.message;
           output.classList.add("error");
         } finally {
           loading.hidden = true;
@@ -303,6 +310,24 @@
       back.addEventListener("click", () => {
         result.hidden = true;
         form.hidden = false;
+      });
+
+      const clearSettings = document.querySelector("#clear-settings");
+
+      clearSettings.addEventListener("click", async (event) => {
+        event.preventDefault();
+
+        const { confirm } = await import("https://esm.sh/cf-alert");
+        const confirmed = await confirm(
+          "This deletes the saved API key, base URL and model.",
+          { yes: "Clear", no: "Cancel" },
+          "Clear AI settings?",
+        );
+
+        if (!confirmed) return;
+
+        clearStorage();
+        location.reload();
       });
 
       root.hidden = false;

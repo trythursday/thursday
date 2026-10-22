@@ -17,3 +17,7 @@ export const getApiKey = () => localStorage.getItem(KEYS.apiKey);
 export const getBaseUrl = () => localStorage.getItem(KEYS.baseUrl);
 
 export const getModel = () => localStorage.getItem(KEYS.model);
+
+export const clearStorage = () => {
+  for (const key of Object.values(KEYS)) localStorage.removeItem(key);
+};
