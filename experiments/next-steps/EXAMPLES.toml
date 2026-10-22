@@ -1,0 +1,66 @@
+# Realistic inputs for Next Steps. Fetched by index.html.
+
+[[examples]]
+goal = "I want to quit my job"
+thoughts = """
+I have been at the same company for four years. I dread Sunday nights and I am
+not learning anything anymore. I have three months of savings and a partner who
+can cover rent for a while. I do not know what I would do next, but I know I
+cannot stay another year.
+"""
+
+[[examples]]
+goal = "I want to learn to code"
+thoughts = """
+I have tried a few tutorials and always stop around functions. I use
+spreadsheets a lot at work and keep thinking a small tool would save me hours.
+I have maybe five hours a week and a laptop.
+"""
+
+[[examples]]
+goal = "I want to write a book"
+thoughts = """
+I have an idea about a detective in a small town, but every time I sit down I
+freeze. I have never written anything longer than a school essay. I read a lot
+of crime novels and I have notes on my phone.
+"""
+
+[[examples]]
+goal = "I want to start exercising"
+thoughts = """
+I am 34, sit at a desk all day, and get out of breath on stairs. I hate gyms
+and team sports. I used to cycle everywhere in my twenties. I have a bike in
+the shed with flat tyres.
+"""
+
+[[examples]]
+goal = "I want to improve my focus"
+thoughts = """
+I check my phone every few minutes and by the end of the day I cannot remember
+what I actually did. I have a deadline in three weeks and I am behind. I work
+from home alone.
+"""
+
+[[examples]]
+goal = "I want to get into a relationship"
+thoughts = """
+I have not dated in two years. I meet people at work and through climbing, but
+I never ask anyone out. I am worried about being rejected and I do not drink,
+so bars are out.
+"""
+
+[[examples]]
+goal = "I want to write the perfect resume"
+thoughts = """
+I have been in the same role for five years and my resume has not changed since
+university. I am applying for product roles and I do not know how to make my
+experience sound relevant. I have led two migrations and mentored three
+juniors.
+"""
+
+[[examples]]
+goal = "I want to be a dinosaur"
+thoughts = """
+I know it is impossible. I just think it would be fun for a weekend. I like
+costumes and I have friends who would probably join in.
+"""
