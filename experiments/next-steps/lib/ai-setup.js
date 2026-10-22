@@ -127,7 +127,7 @@ class AiSetup extends HTMLElement {
       });
 
       setBaseUrl(`${API_BASE}/api/v1`);
-      setApiEndpoint("frontier");
+      setApiEndpoint("local");
       setApiKey(apiKey);
 
       this.dispatchEvent(new CustomEvent("setup-complete", { bubbles: true }));
