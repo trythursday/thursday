@@ -1,5 +1,6 @@
 import { generate, preload } from "./ai.js";
 import { getApiKey, clearStorage } from "./storage.js";
+import { isFreeKey, keyExpiry } from "./ai-for-all-client.js";
 
 const micromarkPromise = import("https://esm.sh/micromark@4");
 
@@ -37,9 +38,48 @@ const showForm = () => {
   form.hidden = false;
 };
 
+const provider = document.querySelector("#provider");
+const providerNote = provider.querySelector(".note");
+
+const formatRemaining = (ms) => {
+  const total = Math.max(0, Math.ceil(ms / 60_000));
+  const hours = Math.floor(total / 60);
+  const minutes = total % 60;
+
+  if (!hours) return `${minutes}m`;
+
+  return minutes ? `${hours}h ${minutes}m` : `${hours}h`;
+};
+
+const renderProvider = () => {
+  const apiKey = getApiKey();
+
+  provider.hidden = !apiKey;
+
+  if (!apiKey) return;
+
+  if (!isFreeKey(apiKey)) {
+    providerNote.textContent = "Using a custom AI provider";
+    return;
+  }
+
+  const expiry = keyExpiry(apiKey);
+
+  providerNote.textContent =
+    expiry && expiry > Date.now()
+      ? `Using AI For All, access expires in ${formatRemaining(expiry - Date.now())}`
+      : "Using AI For All, access has expired";
+};
+
+renderProvider();
+setInterval(renderProvider, 30_000);
+
 if (getApiKey()) showForm();
 
-setup.addEventListener("setup-complete", showForm);
+setup.addEventListener("setup-complete", () => {
+  renderProvider();
+  showForm();
+});
 
 const goal = document.querySelector("#goal");
 const hintRow = document.querySelector(".hint-row");
@@ -127,17 +167,23 @@ next.addEventListener("click", async () => {
         ? await error.json().catch(() => null)
         : null;
 
+    const expiry = keyExpiry(getApiKey());
+    const expired = expiry !== null && expiry <= Date.now();
+
     output.textContent =
-      error?.status === 401
-        ? "Your key expired. Clear the AI settings to get a new one."
-        : (reply?.error?.message ??
-          error?.message ??
-          "Something went wrong.");
+      expired
+        ? "Your free key expired. Clear the AI settings to get a new one."
+        : error?.status === 401
+          ? "That key was rejected. Clear the AI settings to enter another."
+          : (reply?.error?.message ??
+            error?.message ??
+            "Something went wrong.");
 
     output.classList.add("error");
   } finally {
     loading.hidden = true;
     next.disabled = false;
+    renderProvider();
   }
 });
 

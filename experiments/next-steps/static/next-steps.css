@@ -57,3 +57,14 @@ ai-setup {
 #result .input-group {
   margin-top: 4rem;
 }
+
+.provider {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.provider .note {
+  opacity: 0.7;
+}

@@ -1,5 +1,25 @@
 export const API_BASE = "https://ai-for-all.trythursday.org";
 
+// A key is the prefix, then the expiry in base36 seconds, then a signature.
+// Only the expiry is readable without the server secret.
+const PREFIX = "sk-th-";
+const EXPIRY_CHARS = 7;
+const KEY_CHARS = EXPIRY_CHARS + 16;
+
+export const isFreeKey = (apiKey) => apiKey?.startsWith(PREFIX) ?? false;
+
+export function keyExpiry(apiKey) {
+  if (!isFreeKey(apiKey)) return null;
+
+  const body = apiKey.slice(PREFIX.length);
+
+  if (body.length !== KEY_CHARS) return null;
+
+  const seconds = Number.parseInt(body.slice(0, EXPIRY_CHARS), 36);
+
+  return Number.isSafeInteger(seconds) ? new Date(seconds * 1_000) : null;
+}
+
 const WASM_URL =
   "https://cdn.jsdelivr.net/npm/@cap.js/wasm@0.0.8/browser/cap_wasm.js";
 

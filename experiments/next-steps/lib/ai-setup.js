@@ -14,6 +14,10 @@ const views = {
             project offers
             <a href="https://ai-for-all.trythursday.org">free AI usage</a>.
           </p>
+          <p>
+            No account. Your computer solves a small challenge, and the key
+            lasts 24 hours. Keys are disposable: if one expires, get another.
+          </p>
           <div class="ai-actions">
             <button type="button" data-view="free">
               Get free AI access now
