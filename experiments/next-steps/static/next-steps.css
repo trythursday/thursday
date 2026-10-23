@@ -53,3 +53,7 @@ ai-setup {
 .result {
   text-align: left;
 }
+
+#result .input-group {
+  margin-top: 4rem;
+}

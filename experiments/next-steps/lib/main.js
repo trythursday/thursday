@@ -1,7 +1,7 @@
 import { generate, preload } from "./ai.js";
 import { getApiKey, clearStorage } from "./storage.js";
 
-const markedPromise = import("https://esm.sh/marked");
+const micromarkPromise = import("https://esm.sh/micromark@4");
 
 const setup = document.querySelector("ai-setup");
 const root = document.querySelector("#root");
@@ -13,6 +13,24 @@ const back = document.querySelector("#back");
 const random = document.querySelector("#random");
 const loading = result.querySelector(".loading");
 const loadingText = result.querySelector(".loading-text");
+
+let latest = "";
+let shown = "";
+let frame = 0;
+let parse = () => "";
+
+const paint = () => {
+  if (frame) return;
+
+  frame = requestAnimationFrame(() => {
+    frame = 0;
+
+    if (latest === shown) return;
+
+    shown = latest;
+    output.innerHTML = parse(latest);
+  });
+};
 
 const showForm = () => {
   setup.hidden = true;
@@ -80,8 +98,12 @@ next.addEventListener("click", async () => {
   loading.hidden = false;
   loadingText.textContent = "Loading (Connecting to AI provider)";
 
+  latest = "";
+  shown = "";
+
   try {
-    const { marked } = await markedPromise;
+    const { micromark } = await micromarkPromise;
+    parse = micromark;
     await preload();
     loadingText.textContent = "Loading (Waiting for AI response)";
 
@@ -90,10 +112,16 @@ next.addEventListener("click", async () => {
       thoughts: thoughts.value,
       onToken: (text) => {
         if (text.trim()) loading.hidden = true;
-        output.innerHTML = marked.parse(text);
+        latest = text;
+        paint();
       },
     });
   } catch (error) {
+    if (frame) {
+      cancelAnimationFrame(frame);
+      frame = 0;
+    }
+
     const reply =
       error instanceof Response
         ? await error.json().catch(() => null)
