@@ -54,7 +54,7 @@ const formatRemaining = (ms) => {
 const renderProvider = () => {
   const apiKey = getApiKey();
 
-  provider.hidden = !apiKey;
+  providerNote.hidden = !apiKey;
 
   if (!apiKey) return;
 
@@ -167,8 +167,11 @@ next.addEventListener("click", async () => {
         ? await error.json().catch(() => null)
         : null;
 
-    const expiry = keyExpiry(getApiKey());
-    const expired = expiry !== null && expiry <= Date.now();
+    const apiKey = getApiKey();
+    const expiry = keyExpiry(apiKey);
+
+    // A free key with no readable expiry predates signed keys, so it is dead.
+    const expired = isFreeKey(apiKey) && !(expiry > Date.now());
 
     output.textContent =
       expired
