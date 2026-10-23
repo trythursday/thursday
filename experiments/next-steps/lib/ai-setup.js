@@ -31,7 +31,7 @@ const views = {
       <section class="setup">
         <h2>AI Setup</h2>
         <div class="state-body">
-          <p>One click to get access valid for 30 days.</p>
+          <p>One click to get access valid for 24 hours.</p>
           <div class="progress">
             <progress max="1" value="0"></progress>
             <span>0%</span>

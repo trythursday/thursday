@@ -1,0 +1,45 @@
+#cf-alert {
+  width: min(40ch, 100%);
+  max-width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  background-color: var(--c-bg);
+  color: var(--c-fg);
+  border: 2px solid var(--c-fg);
+  border-radius: 0.4rem;
+}
+
+#cf-alert::backdrop {
+  background-color: rgb(0 0 0 / 0.4);
+}
+
+#alert-header {
+  font-weight: bold;
+}
+
+#alert-header,
+#alert-body,
+#alert-footer {
+  padding: 1rem 1.5rem;
+}
+
+#alert-footer {
+  text-align: right;
+}
+
+#alert-ok,
+#alert-cancel {
+  min-width: 10ch;
+  margin: 0.2rem;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--c-fg);
+  border-radius: 0.4rem;
+  background-color: var(--c-fg);
+  color: var(--c-bg);
+  cursor: pointer;
+}
+
+#alert-cancel {
+  background: none;
+  color: inherit;
+}

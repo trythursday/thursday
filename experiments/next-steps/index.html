@@ -13,6 +13,7 @@
       href="https://cdn.jsdelivr.net/gh/trythursday/fieber@main/fieber.css"
     />
     <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./alert.css" />
     <style>
       ai-setup {
         display: block;
@@ -23,23 +24,12 @@
       }
 
       .setup {
-        display: flex;
-        flex: none;
-        flex-direction: column;
         width: 40ch;
         max-width: 100%;
-        height: 38rem;
         margin: 6rem auto 0;
         padding: 3rem;
         border: 2px solid;
         text-align: center;
-      }
-
-      .state-body {
-        display: flex;
-        flex: 1;
-        flex-direction: column;
-        justify-content: center;
       }
 
       .setup h2 {
@@ -108,8 +98,6 @@
       }
 
       .result {
-        flex: 1;
-        overflow-y: auto;
         text-align: left;
       }
 
@@ -149,10 +137,7 @@
     <div id="root" hidden>
       <header>
         <h1>Next Steps</h1>
-        <p>
-          Type your goal into the box, then any thoughts you have about the
-          situation. Or click Random Example to see some possibilities.
-        </p>
+        <p>Get anything done by starting now.</p>
       </header>
 
       <main>
@@ -160,6 +145,10 @@
 
         <section class="body" id="form" hidden>
           <form>
+            <p>
+              Type your goal into the box, then any thoughts you have about the
+              situation. Or click Random Example to see some possibilities.
+            </p>
             <label for="goal">Goal</label>
             <input id="goal" name="goal" type="text" placeholder="I want to..." />
             <div class="hint-row"></div>
@@ -182,7 +171,7 @@
         <section class="body" id="result" hidden>
           <p class="loading" hidden>
             <span class="spinner"></span>
-            Loading…
+            <span class="loading-text">Loading…</span>
           </p>
           <div class="result"></div>
           <div class="input-group">
@@ -191,12 +180,11 @@
         </section>
       </main>
 
-      <p>
-        <a href="#" id="clear-settings">Clear AI settings</a>
-      </p>
-
       <footer>
         <hr />
+        <p>
+          <a href="#" id="clear-settings">Clear AI settings</a>
+        </p>
         <p>
           Next Steps is part of the
           <a href="https://github.com/trythursday/thursday">Thursday</a>
@@ -205,132 +193,6 @@
       </footer>
     </div>
     <script type="module" src="./lib/ai-setup.js"></script>
-    <script type="module">
-      import { generate } from "./lib/ai.js";
-      import { getApiKey, clearStorage } from "./lib/storage.js";
-
-      const setup = document.querySelector("ai-setup");
-      const root = document.querySelector("#root");
-      const form = document.querySelector("#form");
-      const result = document.querySelector("#result");
-      const output = result.querySelector(".result");
-      const next = document.querySelector("#next");
-      const back = document.querySelector("#back");
-      const random = document.querySelector("#random");
-      const loading = result.querySelector(".loading");
-
-      const showForm = () => {
-        setup.hidden = true;
-        form.hidden = false;
-      };
-
-      if (getApiKey()) showForm();
-
-      setup.addEventListener("setup-complete", showForm);
-
-      const goal = document.querySelector("#goal");
-      const hintRow = document.querySelector(".hint-row");
-
-      const HINTS = [
-        "quit my job",
-        "be a dinosaur",
-        "solve world hunger",
-        "fly a plane",
-        "get into a relationship",
-        "start exercising",
-        "be a better person",
-        "improve my focus",
-        "write a book",
-        "learn to code",
-        "write the perfect resume",
-      ];
-
-      for (const hint of [...HINTS].sort(() => Math.random() - 0.5).slice(0, 3)) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.textContent = `...${hint}`;
-        button.addEventListener("click", () => {
-          goal.value = `I want to ${hint}`;
-        });
-        hintRow.append(button);
-      }
-
-      const thoughts = document.querySelector("#thoughts");
-
-      let examples;
-
-      const loadExamples = async () => {
-        if (!examples) {
-          const { parse } = await import("https://esm.sh/smol-toml");
-          const text = await (await fetch("./EXAMPLES.toml")).text();
-          examples = parse(text).examples;
-        }
-        return examples;
-      };
-
-      random.addEventListener("click", async () => {
-        const all = await loadExamples();
-        const example = all[Math.floor(Math.random() * all.length)];
-
-        goal.value = example.goal;
-        thoughts.value = example.thoughts;
-      });
-
-      next.addEventListener("click", async () => {
-        form.hidden = true;
-        result.hidden = false;
-        output.textContent = "";
-        output.classList.remove("error");
-        next.disabled = true;
-        loading.hidden = false;
-
-        try {
-          const { marked } = await import("https://esm.sh/marked");
-
-          await generate({
-            goal: goal.value,
-            thoughts: thoughts.value,
-            onToken: (text) => {
-              loading.hidden = true;
-              output.innerHTML = marked.parse(text);
-            },
-          });
-        } catch (error) {
-          output.textContent =
-            error?.status === 401
-              ? "Try again tomorrow or clearing the AI settings."
-              : error.message;
-          output.classList.add("error");
-        } finally {
-          loading.hidden = true;
-          next.disabled = false;
-        }
-      });
-
-      back.addEventListener("click", () => {
-        result.hidden = true;
-        form.hidden = false;
-      });
-
-      const clearSettings = document.querySelector("#clear-settings");
-
-      clearSettings.addEventListener("click", async (event) => {
-        event.preventDefault();
-
-        const { confirm } = await import("https://esm.sh/cf-alert");
-        const confirmed = await confirm(
-          "This deletes the saved API key, base URL and model.",
-          { yes: "Clear", no: "Cancel" },
-          "Clear AI settings?",
-        );
-
-        if (!confirmed) return;
-
-        clearStorage();
-        location.reload();
-      });
-
-      root.hidden = false;
-    </script>
+    <script type="module" src="./lib/main.js"></script>
   </body>
 </html>

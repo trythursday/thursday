@@ -1,25 +1,5 @@
-html,
-body,
-#root {
-  height: 100%;
-}
-
 [hidden] {
   display: none !important;
-}
-
-#root {
-  display: flex;
-  flex-direction: column;
-}
-
-main,
-section.body,
-form {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
 }
 
 .hint-row {
@@ -38,11 +18,8 @@ form {
   margin: 2rem 0.5rem;
 }
 
-.submit-group {
-  justify-content: flex-end;
-}
-
 footer {
+  margin-top: 4rem;
   font-size: 1.4rem;
 }
 
@@ -51,9 +28,8 @@ footer p {
 }
 
 textarea {
-  flex: 1;
-  min-height: 0;
-  resize: none;
+  min-height: 30rem;
+  resize: vertical;
 }
 
 @media (max-width: 600px) {

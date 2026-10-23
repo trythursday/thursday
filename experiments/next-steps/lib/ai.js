@@ -1,8 +1,12 @@
 import { getApiKey, getBaseUrl, getModel } from "./storage.js";
 
 const SYSTEM_PROMPT_URL = new URL("../SYSTEM-PROMPT.md", import.meta.url);
+const OPENAI_URL = "https://esm.sh/jsr/@agent/openai@0.0.8";
 
+let openaiPromise;
 let systemPrompt;
+
+export const preload = () => (openaiPromise ??= import(OPENAI_URL));
 
 async function loadSystemPrompt() {
   if (!systemPrompt) {
@@ -12,21 +16,24 @@ async function loadSystemPrompt() {
 }
 
 export async function generate({ goal, thoughts, onToken }) {
-  const { default: OpenAI } = await import("https://esm.sh/openai@7.42.0");
+  const OpenAI = await preload();
 
-  const client = new OpenAI({
-    apiKey: getApiKey(),
-    baseURL: getBaseUrl(),
-    dangerouslyAllowBrowser: true,
+  const client = OpenAI.credentials({
+    apikey: getApiKey(),
+    baseURL: `${(getBaseUrl() ?? "").replace(/\/+$/, "")}/`,
   });
 
-  const stream = await client.chat.completions.create({
-    model: getModel(),
-    messages: [
-      { role: "system", content: await loadSystemPrompt() },
-      { role: "user", content: `Goal: ${goal}\n\nThoughts:\n${thoughts}` },
-    ],
-    stream: true,
+  const stream = await OpenAI.stream(client, {
+    method: "POST",
+    path: "/chat/completions",
+    body: {
+      stream: true,
+      model: getModel(),
+      messages: [
+        { role: "system", content: await loadSystemPrompt() },
+        { role: "user", content: `Goal: ${goal}\n\nThoughts:\n${thoughts}` },
+      ],
+    },
   });
 
   let text = "";

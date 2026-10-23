@@ -110,7 +110,7 @@ export async function getFreeKey(onProgress) {
   const issued = await post(
     "/api/v1/issue",
     { token, solutions },
-    "This IP already received a key today. Try again tomorrow.",
+    "A key was issued from this IP in the past 10 minutes. Try again shortly.",
   );
 
   return issued.payload.apiKey;
