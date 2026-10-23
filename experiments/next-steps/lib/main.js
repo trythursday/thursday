@@ -57,7 +57,7 @@ let examples;
 const loadExamples = async () => {
   if (!examples) {
     const { parse } = await import("https://esm.sh/smol-toml");
-    const text = await (await fetch("./EXAMPLES.toml")).text();
+    const text = await (await fetch("./static/EXAMPLES.toml")).text();
     examples = parse(text).examples;
   }
   return examples;

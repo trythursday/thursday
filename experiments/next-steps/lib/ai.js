@@ -1,6 +1,9 @@
 import { getApiKey, getBaseUrl, getModel } from "./storage.js";
 
-const SYSTEM_PROMPT_URL = new URL("../SYSTEM-PROMPT.md", import.meta.url);
+const SYSTEM_PROMPT_URL = new URL(
+  "../static/SYSTEM-PROMPT.md",
+  import.meta.url,
+);
 const OPENAI_URL = "https://esm.sh/jsr/@agent/openai@0.0.8";
 
 let openaiPromise;
