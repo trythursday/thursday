@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "record_kind": "synthetic_example",
+  "workflow_mode": "scoped",
+  "verification_boundary": "none",
+  "consumer_verified": null,
+  "confirmation_turns": null,
+  "source_bytes_returned": null,
+  "truncated_tool_results": null,
+  "repeated_unchanged_reads": null,
+  "check_runs": null,
+  "failed_check_runs": null,
+  "expected_red_runs": null,
+  "input_tokens": null,
+  "output_tokens": null
+}

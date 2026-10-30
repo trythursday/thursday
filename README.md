@@ -49,6 +49,10 @@ small experiments that use generative intelligence in unconventional ways.
 
 ## In this repo
 
+Optional experiment: [local machine-readable feedback](./docs/feedback-record.md)
+provides a template/schema and validator. It collects no session data and uploads
+nothing; measurement and any later sharing are explicit operator choices.
+
 - `.agents/skills/` - the Thursday root skill, and one generated skill per verb
 - `procedures/` - one concept per file; each carries its own description and undo
 - `threads/` - experimental info organization system
