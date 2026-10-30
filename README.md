@@ -56,6 +56,9 @@ small experiments that use generative intelligence in unconventional ways.
 - `experiments/` - prototypes and ideas.
 - `scripts/` - Thursday tools, for people and machines
 
+For bounded implementation work, see the optional [small-task profile](docs/bounded-task-profile.md).
+It uses existing procedures and keeps your configured format and approval behavior.
+
 ## License
 
 I want you to steal thursday. I ENCOURAGE you to steal thursday.
