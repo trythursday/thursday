@@ -222,10 +222,11 @@ git configs, or global ignores without saying so first.
 
 ## Undo
 
-`state/install.json` is the record: the root, the personal dir, and every skill
-directory with the exact entries written into it. Undo reads that file, so it
-removes what was installed rather than what today's rules would install. Run it
-before deleting the root — once the root is gone, the record is gone.
+`state/install.json` is the record: the root, the personal dir, every skill
+directory with the exact entries written into it, and every shipped procedure with
+the hash of the copy setup wrote. Undo reads the first half; `--refresh-shipped`
+reads the second. Run it before deleting the root — once the root is gone, the
+record is gone.
 
 Say this out loud during setup, not just in a file. Give the command for their
 platform.

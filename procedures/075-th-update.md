@@ -60,12 +60,22 @@ not touched.
      ```
    - if one names a human decision, follow that migration by hand first, then run
      setup. Do not skip it because setup succeeded
-6. Verify:
+6. Refresh the shipped copies setup wrote, when the release changed a procedure.
+   Setup never overwrites a copy that is already there, so an edited procedure
+   stays put — and a stale one stays stale:
+   ```sh
+   <install.runtime> <checkout>/scripts/setup.ts --refresh-shipped
+   ```
+   It replaces the copies whose hash still matches the one setup recorded, and
+   names every file it leaves. Read those names out. A file it leaves with no
+   record predates the manifest; `migrations/0003-runtime.md` says how to settle
+   those by hand
+7. Verify:
    - `<install.runtime> <checkout>/scripts/th-proc.ts --list` resolves every
      procedure, and says `personal` for the ones setup materialized
    - the generated skills contain the resolver, not a fallback list
    - `install.version` in the config is the new version
-7. Report old version to new version in one line, and what was refreshed. Do not
+8. Report old version to new version in one line, and what was refreshed. Do not
    narrate the steps that needed no decision.
 
 ## Harm reduction

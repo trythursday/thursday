@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -9,7 +10,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { cloneSource, materializeProcedures } from "./setup.ts";
+import { cloneSource, materializeProcedures, shippedState } from "./setup.ts";
 import { availableRuntimes } from "./test-helpers.ts";
 
 const setup = join(import.meta.dir, "setup.ts");
@@ -144,7 +145,7 @@ describe("materializeProcedures", () => {
 
     const counts = await materializeProcedures(checkout, procedures, false);
 
-    expect(counts).toEqual({ copied: 3, kept: 0 });
+    expect(counts).toMatchObject({ copied: 3, kept: 0 });
     expect(readFileSync(join(procedures, "000-th-how-to-talk.md"), "utf8")).toBe(
       "shipped talk\n",
     );
@@ -160,13 +161,13 @@ describe("materializeProcedures", () => {
     writeFileSync(join(procedures, "000-th-how-to-talk.md"), "my edit\n");
 
     const first = await materializeProcedures(checkout, procedures, false);
-    expect(first).toEqual({ copied: 2, kept: 1 });
+    expect(first).toMatchObject({ copied: 2, kept: 1 });
     expect(readFileSync(join(procedures, "000-th-how-to-talk.md"), "utf8")).toBe(
       "my edit\n",
     );
 
     const second = await materializeProcedures(checkout, procedures, false);
-    expect(second).toEqual({ copied: 0, kept: 3 });
+    expect(second).toMatchObject({ copied: 0, kept: 3 });
   });
 
   test("a dry run writes nothing", async () => {
@@ -174,7 +175,7 @@ describe("materializeProcedures", () => {
 
     const counts = await materializeProcedures(checkout, procedures, true);
 
-    expect(counts).toEqual({ copied: 3, kept: 0 });
+    expect(counts).toMatchObject({ copied: 3, kept: 0 });
     expect(existsSync(procedures)).toBe(false);
   });
 
@@ -188,6 +189,66 @@ describe("materializeProcedures", () => {
       false,
     );
 
-    expect(counts).toEqual({ copied: 0, kept: 0 });
+    expect(counts).toMatchObject({ copied: 0, kept: 0 });
+  });
+});
+
+describe("the provenance record", () => {
+  test("records every copy it wrote", async () => {
+    const { checkout, procedures } = shipped();
+
+    const { written } = await materializeProcedures(checkout, procedures, false);
+
+    expect(Object.keys(written).sort()).toEqual([
+      "000-th-how-to-talk.md",
+      "030-th-learn.md",
+      "skill-examples/README.md",
+    ]);
+  });
+
+  test("records a copy that is already there and byte-identical", async () => {
+    const { checkout, procedures, shipped: from } = shipped();
+    mkdirSync(procedures, { recursive: true });
+    writeFileSync(
+      join(procedures, "000-th-how-to-talk.md"),
+      readFileSync(join(from, "000-th-how-to-talk.md")),
+    );
+
+    const { written } = await materializeProcedures(checkout, procedures, false);
+
+    expect(written["000-th-how-to-talk.md"]).toBeDefined();
+  });
+
+  test("records nothing for a copy that differs — that one is not ours to claim", async () => {
+    const { checkout, procedures } = shipped();
+    mkdirSync(procedures, { recursive: true });
+    writeFileSync(join(procedures, "000-th-how-to-talk.md"), "my edit\n");
+
+    const { written } = await materializeProcedures(checkout, procedures, false);
+
+    expect(written["000-th-how-to-talk.md"]).toBeUndefined();
+  });
+});
+
+describe("shippedState", () => {
+  const shippedBytes = Buffer.from("shipped\n");
+  const mine = Buffer.from("my edit\n");
+  const recorded = createHash("sha256").update(mine).digest("hex");
+
+  test("identical is current, whatever the record says", () => {
+    expect(shippedState(shippedBytes, shippedBytes, undefined)).toBe("current");
+    expect(shippedState(shippedBytes, shippedBytes, "stale")).toBe("current");
+  });
+
+  test("a recorded copy that changed is stale, and safe to refresh", () => {
+    expect(shippedState(shippedBytes, mine, recorded)).toBe("refresh");
+  });
+
+  test("a copy that changed with no record is left alone", () => {
+    expect(shippedState(shippedBytes, mine, undefined)).toBe("keep");
+  });
+
+  test("a copy edited after setup wrote it is left alone", () => {
+    expect(shippedState(shippedBytes, mine, "a different hash")).toBe("keep");
   });
 });

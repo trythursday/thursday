@@ -65,7 +65,44 @@ actually uses:
 - bun · `[install].runtime = "<bun> run"`
 - node 24+ · `[install].runtime = "<path to node>"`
 
-**3. Update the config.**
+**3. Settle the personal copies that still describe `bun_path`.**
+
+Your `procedures/` was materialized once and never overwritten, so
+`035-th-setup.md` and `075-th-update.md` may still carry `bun_path`. Setup cannot
+tell a stale copy from your own edit — it only knows a file is there — and an
+install this old has no record to compare against, so it will not touch them.
+
+Settle them by hand. `cmp` prints nothing when the copies are identical, which
+means the file is stale and not yours:
+
+```sh
+for f in 035-th-setup.md 075-th-update.md; do
+  printf '%s: ' "$f"
+  git -C <root>/checkout show <previous version commit>:procedures/$f \
+    | cmp -s - <personal>/procedures/$f \
+    && echo "stale, safe to replace" || echo "edited, or older — ask"
+done
+```
+
+Replace the stale ones with the copies from the new checkout. For anything that
+differs, name the file and ask; do not overwrite it.
+
+**4. Record it, so this is mechanical next time.**
+
+```sh
+<install.runtime> <root>/checkout/scripts/setup.ts --refresh-shipped
+```
+
+Setup now records a hash of every procedure it writes. A copy matching its record
+is one setup wrote and you have not touched: `--refresh-shipped` replaces those
+from the checkout, and names everything it leaves. The copies you replaced in step
+3 are identical to the shipped file, so this records them, and the next release
+needs no hand-work.
+
+Anything it reports as `left alone` had no record. On an install this old that is
+expected, once.
+
+**5. Update the config.**
 
 `install.bun_path` is gone; `install.runtime` is there instead. Confirm both. If
 a hand-edited config ended up with neither, set `runtime` to `<bun> run`.
@@ -82,6 +119,9 @@ a hand-edited config ended up with neither, set `runtime` to `<bun> run`.
 - no generated skill still carries a runtime this install does not have.
   `rg -l "th-proc.ts" <skills dir>` lists the verb skills; each names
   `<install.runtime>`
+- `state/install.json` has a `procedures` list, one entry per shipped procedure
+  with its hash. Running `--refresh-shipped` again reports every file as
+  `current`, and none as `left alone`
 
 ## Undo
 

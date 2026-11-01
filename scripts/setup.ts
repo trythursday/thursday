@@ -24,12 +24,14 @@
  *     bun run scripts/setup.ts --home /tmp/fake --personal /tmp/fake/th --yes
  *     bun run scripts/setup.ts --json
  *     bun run scripts/setup.ts --undo
+ *     bun run scripts/setup.ts --refresh-shipped
  *
  * Runs on bun, or on node 24+. Whichever one runs it is the one it records in
  * `[install].runtime` and bakes into the generated skills.
  */
 
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { once } from "node:events";
 import {
   copyFile,
@@ -135,11 +137,34 @@ export function cloneSource(source: string, home: string) {
 
 const NOT_A_PROCEDURE = new Set(["migrations"]);
 
+const sha256 = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
+
+/** Every shipped procedure, as a path relative to `procedures/`. */
+async function shippedProcedures(from: string, prefix = ""): Promise<string[]> {
+  const out: string[] = [];
+
+  for (const entry of await readdir(from, { withFileTypes: true })) {
+    if (NOT_A_PROCEDURE.has(entry.name)) continue;
+    const rel = prefix ? join(prefix, entry.name) : entry.name;
+
+    if (entry.isDirectory()) {
+      out.push(...(await shippedProcedures(join(from, entry.name), rel)));
+      continue;
+    }
+
+    out.push(rel);
+  }
+
+  return out;
+}
+
 async function copyMissing(
   from: string,
   to: string,
+  rel: string,
   dry: boolean,
   counts: { copied: number; kept: number },
+  written: Record<string, string>,
 ) {
   if (!dry) await mkdir(to, { recursive: true });
 
@@ -148,37 +173,75 @@ async function copyMissing(
 
     const source = join(from, entry.name);
     const target = join(to, entry.name);
+    const name = rel ? join(rel, entry.name) : entry.name;
 
     if (entry.isDirectory()) {
-      await copyMissing(source, target, dry, counts);
+      await copyMissing(source, target, name, dry, counts, written);
       continue;
     }
 
+    const shipped = await readFile(source);
+
     if (await exists(target)) {
       counts.kept++;
+      // Already there and byte-identical: setup's copy, untouched. Record it, so
+      // a later release can tell it from an edit.
+      if (shipped.equals(await readFile(target))) written[name] = sha256(shipped);
       continue;
     }
 
     if (!dry) await copyFile(source, target);
     counts.copied++;
+    written[name] = sha256(shipped);
   }
 }
+
+export type Materialized = {
+  copied: number;
+  kept: number;
+  /** path under the personal procedures dir -> sha256 of the copy sitting there */
+  written: Record<string, string>;
+};
 
 /**
  * Copy the shipped procedures into the personal dir once. An existing file is
  * never overwritten, so a user's copy — and their edits — win from then on.
+ *
+ * Every copy that ends up identical to the shipped file is recorded by hash.
+ * That record is what lets a later release tell a stale copy from an edit;
+ * existence alone cannot, and guessing means overwriting someone's work.
  */
 export async function materializeProcedures(
   checkout: string,
   procedures: string,
   dry: boolean,
-) {
+): Promise<Materialized> {
   const from = join(checkout, "procedures");
   const counts = { copied: 0, kept: 0 };
-  if (!(await exists(from))) return counts;
+  const written: Record<string, string> = {};
+  if (!(await exists(from))) return { ...counts, written };
 
-  await copyMissing(from, procedures, dry, counts);
-  return counts;
+  await copyMissing(from, procedures, "", dry, counts, written);
+  return { ...counts, written };
+}
+
+export type ShippedState = "current" | "refresh" | "keep";
+
+/**
+ * What to do with one personal copy: the shipped bytes, the copy on disk, and
+ * the hash setup recorded when it wrote that copy.
+ *
+ * No record means the copy predates the manifest or was never setup's. Either
+ * way its provenance is unknown, so it is left alone.
+ */
+export function shippedState(
+  shipped: Buffer,
+  mine: Buffer,
+  recorded: string | undefined,
+): ShippedState {
+  if (shipped.equals(mine)) return "current";
+  if (recorded && sha256(mine) === recorded) return "refresh";
+  return "keep";
 }
 
 function rootFor(home: string, platform = process.platform) {
@@ -340,6 +403,8 @@ async function install(layout: Layout, dry: boolean) {
   await mkdir(dirname(layout.config), { recursive: true });
   await writeFile(layout.config, configToml(layout), "utf8");
 
+  const previous = await readManifest(layout);
+
   const procedures = await materializeProcedures(
     layout.checkout,
     layout.procedures,
@@ -358,22 +423,15 @@ async function install(layout: Layout, dry: boolean) {
 
   // What was written where. Undo reads this instead of guessing from files that
   // may have moved or been updated since.
-  await writeFile(
-    layout.manifest,
-    JSON.stringify(
-      {
-        version: VERSION,
-        installed_at: new Date().toISOString(),
-        root: layout.root,
-        personal: layout.personal,
-        config: layout.config,
-        skills: layout.skillsDirs.map((dir) => ({ dir, entries: names })),
-      },
-      null,
-      2,
-    ) + "\n",
-    "utf8",
-  );
+  await writeManifest(layout, {
+    version: VERSION,
+    installed_at: new Date().toISOString(),
+    root: layout.root,
+    personal: layout.personal,
+    config: layout.config,
+    skills: layout.skillsDirs.map((dir) => ({ dir, entries: names })),
+    procedures: mergeProcedures(previous?.procedures, procedures.written),
+  });
 }
 
 /** Thursday's own skills: the root skill plus one per verb. */
@@ -405,42 +463,132 @@ async function existingSkills(config: string) {
   return [raw.replace(/"/g, "")];
 }
 
+type ManifestProcedure = { path: string; sha256: string };
+
+/**
+ * What setup wrote: the skill entries per harness, and each procedure it
+ * materialized with the hash of that copy at the time. `--undo` reads the
+ * first; `--refresh-shipped` reads the second.
+ */
 type Manifest = {
+  version?: string;
+  installed_at?: string;
+  root?: string;
   personal?: string;
+  config?: string;
   skills?: { dir: string; entries: string[] }[];
+  procedures?: ManifestProcedure[];
 };
+
+function mergeProcedures(
+  previous: ManifestProcedure[] | undefined,
+  written: Record<string, string>,
+) {
+  const byPath = new Map((previous ?? []).map((entry) => [entry.path, entry.sha256]));
+  for (const [path, hash] of Object.entries(written)) byPath.set(path, hash);
+
+  return [...byPath.entries()]
+    .map(([path, sha256]) => ({ path, sha256 }))
+    .sort((a, b) => a.path.localeCompare(b.path));
+}
+
+async function writeManifest(layout: Layout, manifest: Manifest) {
+  await writeFile(layout.manifest, JSON.stringify(manifest, null, 2) + "\n", "utf8");
+}
 
 async function readManifest(layout: Layout): Promise<Manifest | undefined> {
   const path = join(layout.root, "state", "install.json");
   if (!(await exists(path))) return undefined;
 
-  let parsed: Manifest;
   try {
-    parsed = JSON.parse(await readFile(path, "utf8")) as Manifest;
+    return JSON.parse(await readFile(path, "utf8")) as Manifest;
   } catch {
     fail(`${path} is not valid JSON. Delete it and undo by hand.`, 2);
   }
+}
 
-  if (
-    !Array.isArray(parsed.skills) ||
-    !parsed.skills.every(
-      (s) => typeof s?.dir === "string" && Array.isArray(s?.entries),
-    )
-  ) {
-    fail(
-      `${path} is not a manifest this version wrote. Delete it and undo by hand.`,
-      2,
-    );
+/**
+ * Replace the personal copies setup wrote that the user has not touched, from
+ * the checkout. A copy whose hash does not match the recorded one is theirs, and
+ * is named rather than overwritten.
+ *
+ * A copy with no record has unknown provenance — it predates the manifest, or it
+ * was never setup's — so it is left alone too. `0003-runtime.md` says how to
+ * settle those by hand.
+ */
+async function refreshShipped(layout: Layout, dry: boolean) {
+  const from = join(layout.checkout, "procedures");
+  if (!(await exists(from))) fail(`no procedures in ${layout.checkout}`, 2);
+
+  const manifest = await readManifest(layout);
+  const recorded = new Map(
+    (manifest?.procedures ?? []).map((entry) => [entry.path, entry.sha256]),
+  );
+  const written: Record<string, string> = {};
+
+  for (const rel of await shippedProcedures(from)) {
+    const source = join(from, rel);
+    const target = join(layout.procedures, rel);
+    const shipped = await readFile(source);
+
+    if (!(await exists(target))) {
+      console.error(`  ${dry ? "would add" : "adding"}      ${rel}`);
+      if (!dry) {
+        await mkdir(dirname(target), { recursive: true });
+        await copyFile(source, target);
+      }
+      written[rel] = sha256(shipped);
+      continue;
+    }
+
+    const state = shippedState(shipped, await readFile(target), recorded.get(rel));
+
+    if (state === "current") {
+      console.error(`  current       ${rel}`);
+      written[rel] = sha256(shipped);
+      continue;
+    }
+
+    if (state === "refresh") {
+      console.error(`  ${dry ? "would refresh" : "refreshing"} ${rel}`);
+      if (!dry) await copyFile(source, target);
+      written[rel] = sha256(shipped);
+      continue;
+    }
+
+    console.error(`  left alone    ${rel} — not setup's copy, or you edited it`);
   }
 
-  return parsed;
+  if (dry) return;
+
+  await writeManifest(layout, {
+    ...(manifest ?? {}),
+    version: manifest?.version ?? VERSION,
+    root: layout.root,
+    personal: layout.personal,
+    config: layout.config,
+    procedures: mergeProcedures(manifest?.procedures, written),
+  });
 }
 
 async function undo(layout: Layout, dry: boolean, purgePersonal: boolean) {
   // The manifest says exactly what was written into each harness. Without it we
   // fall back to the checkout, which can only name the current verb set.
   const manifest = await readManifest(layout);
-  const targets = manifest?.skills ?? [];
+  const skills = manifest?.skills;
+
+  if (
+    skills !== undefined &&
+    (!Array.isArray(skills) ||
+      !skills.every((s) => typeof s?.dir === "string" && Array.isArray(s?.entries)))
+  ) {
+    fail(
+      `${join(layout.root, "state", "install.json")} is not a manifest this version wrote. Delete it and undo by hand.`,
+      2,
+    );
+  }
+
+  const targets = skills ?? [];
 
   if (!targets.length) {
     const names = [...(await generatedSkillNames(layout.checkout))];
@@ -497,6 +645,7 @@ async function main() {
       json: { type: "boolean" },
       undo: { type: "boolean" },
       "purge-personal": { type: "boolean" },
+      "refresh-shipped": { type: "boolean" },
       help: { type: "boolean", short: "h" },
     },
     allowPositionals: false,
@@ -519,6 +668,7 @@ async function main() {
         "  --json              resolved paths on stdout",
         "  --undo              remove what setup created",
         "  --purge-personal    with --undo, also remove your personal dir",
+        "  --refresh-shipped   replace setup's procedure copies from the checkout",
       ].join("\n"),
     );
     return 0;
@@ -558,6 +708,11 @@ async function main() {
 
   if (values.undo) {
     await undo(layout, Boolean(values["dry-run"]), Boolean(values["purge-personal"]));
+    return 0;
+  }
+
+  if (values["refresh-shipped"]) {
+    await refreshShipped(layout, Boolean(values["dry-run"]));
     return 0;
   }
 
