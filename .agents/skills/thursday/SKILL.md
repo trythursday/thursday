@@ -36,7 +36,7 @@ harness's available tools to set it up for them. It may be as simple as adding
 3. Read `000-th-how-to-talk.md`, resolved to one path. That is the response format,
    and it does not expire between turns. Do not go looking for it:
    ```sh
-   bun run <install.repo>/scripts/th-proc.ts 000-th-how-to-talk.md
+   <install.runtime> <install.repo>/scripts/th-proc.ts 000-th-how-to-talk.md
    ```
    Read the path it prints. It is the personal copy. See "Where Thursday reads
    from" if it exits non-zero.
@@ -333,11 +333,13 @@ for a file the personal dir does not have, and it is never the workspace:
 Resolve a procedure to one path with the resolver. Never read one from each place:
 
 ```sh
-bun run <install.repo>/scripts/th-proc.ts 000-th-how-to-talk.md
+<install.runtime> <install.repo>/scripts/th-proc.ts 000-th-how-to-talk.md
 ```
 
-It prints exactly one path on stdout: the personal copy when there is one, the
-shipped copy otherwise. Exit 1 means the procedure does not exist — say so.
+`<install.runtime>` is the interpreter recorded in the config — the node or the
+bun that ran setup, whichever it was. It prints exactly one path on stdout: the
+personal copy when there is one, the shipped copy otherwise. Exit 1 means the
+procedure does not exist — say so.
 
 If the config is missing, the user has not set up a Thursday dir. Point them at
 `035-th-setup.md`; until they do, the checkout is the only copy and reading from

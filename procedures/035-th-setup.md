@@ -85,10 +85,12 @@ paths in the toml. Do not store `~` or `%VAR%` — they do not expand consistent
    - macOS · `~/Documents/Thursday` or `~/th`
    - Windows · `%USERPROFILE%\th` or `Documents\Thursday`
    Do not ask anything else yet.
-5. **Get bun, if it is missing.** `sh scripts/bunstrap.sh` on Unix,
+5. **Get a runtime.** `sh scripts/bunstrap.sh` on Unix,
    `powershell -File scripts\bunstrap.ps1` on Windows. It uses a bun that is
    already on PATH, and otherwise installs a pinned version into the root's own
-   `bin/`. Never install bun system-wide and never edit a shell profile.
+   `bin/`. If the user does not run bun but has node 24 or newer, it uses node
+   instead and installs nothing. Never install a runtime system-wide and never
+   edit a shell profile.
    If bunstrap cannot reach the network, say so and fall back to writing the
    files by hand from the rules in `050-th-procedures.md`; a real user got a
    working install that way.
@@ -106,9 +108,9 @@ paths in the toml. Do not store `~` or `%VAR%` — they do not expand consistent
    resolves from it. See the shape below.
 8. **Install the skills.** From the checkout, copy
    `.agents/skills/thursday/SKILL.md` into every skills dir the user gave, and run
-   `bun run scripts/gen-th-skills.ts --out <skills dir>` for each. One user can
-   have several harnesses; ask whether there are more than one before installing.
-   See `040-th-harnesses.md` for where each harness keeps them.
+   `scripts/gen-th-skills.ts --out <skills dir>` with the runtime from step 5, for
+   each. One user can have several harnesses; ask whether there are more than one
+   before installing. See `040-th-harnesses.md` for where each harness keeps them.
 9. **Offer the default, once.** The install is a skill the user triggers; that is
    the default unless they say otherwise. Right after it works, ask once whether
    they would like Thursday to be the default mode in their harness.
@@ -126,8 +128,8 @@ paths in the toml. Do not store `~` or `%VAR%` — they do not expand consistent
    auto-accept deliberately when they want a burst of autonomy.
 11. **Verify.** Read the config back, list the generated skills, and check that
     every skill pointing at a procedure resolves through the resolver:
-    `bun run <install.repo>/scripts/th-proc.ts <file>`. Exit 1 means it is
-    missing. Run it once per procedure; do not check both directories by hand.
+    `<install.runtime> <install.repo>/scripts/th-proc.ts <file>`. Exit 1 means it
+    is missing. Run it once per procedure; do not check both directories by hand.
 12. **Close the first run.** Tell them Thursday is meant to be inobtrusive and
     disrupt their workflow as little as possible. The only thing to remember:
     type `/thursday` at any time — mid-session, fresh session, brand-new
@@ -140,12 +142,12 @@ paths in the toml. Do not store `~` or `%VAR%` — they do not expand consistent
 # resolved per platform — see "Resolve paths first"
 [install]
 repo = "/home/sid/.local/share/thursday/checkout"
-version = "0.1.2"
+version = "0.2.0"
 skills = [
   "/home/sid/.commandcode/skills",
   "/home/sid/.config/opencode/skills",
 ]
-bun_path = "/home/sid/.bun/bin/bun"
+runtime = "bun run"  # or the path to node, e.g. "/usr/local/bin/node"
 platform = "linux"   # linux | darwin | win32
 
 [personal]
@@ -176,7 +178,8 @@ Rules:
 - `install.skills` is a list, one entry per harness. A user with Claude Code and
   OpenCode gets the same procedures installed in both; the config is the only
   place that knows about either
-- `install.bun_path` is the bun that ran setup. Use it for later runs instead of
+- `install.runtime` is the interpreter that ran setup, written as a command
+  prefix: `bun run`, or the path to node. Use it for later runs instead of
   re-detecting, so a bootstrapped bun in `<root>/bin` keeps working
 - `install.platform` lets later migrations branch without re-detecting
 - the config is written by setup only
@@ -192,6 +195,7 @@ Setup is a sequence of migrations, not one script. Each migration is a file in
 
 - `0001-setup.md` · first install
 - `0002-materialize.md` · copy the shipped procedures into the personal dir
+- `0003-runtime.md` · record the runtime that ran setup, not a bun path
 - `TEMPLATE.md` · the shape to copy for every one after it
 - **the first step is always the checkout.** A migration names a commit and moves
   `<root>/checkout` to at least that commit before touching anything. The rules

@@ -11,7 +11,7 @@ doing; rebuild session and project state; stop everything else
 
 Then resolve `010-th-situational-awareness.md` and read it:
 
-    bun run <install.repo>/scripts/th-proc.ts 010-th-situational-awareness.md
+    <runtime> <install.repo>/scripts/th-proc.ts 010-th-situational-awareness.md
 
 It prints one path: the personal copy when there is one, the shipped copy otherwise.
 If it exits non-zero the procedure is missing — say so. Never read one from each

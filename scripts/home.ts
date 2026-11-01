@@ -1,3 +1,7 @@
+// thursday-note:
+//   desc: builds dist/index.html from site/HOME.md; bun-only, run by `just site`
+//   maintainer: true
+
 const source = await Bun.file(
   new URL("../site/HOME.md", import.meta.url),
 ).text();

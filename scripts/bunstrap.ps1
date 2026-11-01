@@ -1,13 +1,15 @@
-# bunstrap on Windows: make sure bun exists, then hand off to setup.
+# bunstrap on Windows: make sure a runtime exists, then hand off to setup.
 #
-# Uses bun if it is already on PATH. If it is not, installs a pinned copy into
-# the Thursday root and uses that. Nothing is installed system-wide.
+# Prefers bun: one already on PATH, or a pinned copy installed into the Thursday
+# root. Falls back to node 24+ for a user who does not run bun. Nothing is
+# installed system-wide.
 #
 #   powershell -ExecutionPolicy Bypass -File scripts\bunstrap.ps1 --personal $HOME\th --skills-dir $HOME\.commandcode\skills --yes
 #
 # Every argument is passed through to scripts\setup.ts.
 
 $ErrorActionPreference = "Stop"
+$NodeFloor = 24
 $BunVersion = "1.4.2"
 $RepoDir = Split-Path -Parent $PSScriptRoot
 
@@ -16,31 +18,46 @@ function Get-ThursdayRoot {
     return Join-Path $env:LOCALAPPDATA "thursday"
 }
 
+function Test-NodeCurrent {
+    $node = Get-Command node -ErrorAction SilentlyContinue
+    if (-not $node) { return $false }
+    $major = & node -p 'process.versions.node.split(".")[0]'
+    return [int]$major -ge $NodeFloor
+}
+
 $Root = Get-ThursdayRoot
 $LocalBun = Join-Path $Root "bin\bun.exe"
-$Bun = $null
+$Runtime = $null
+$RuntimeRun = @()
 
 $onPath = Get-Command bun -ErrorAction SilentlyContinue
 if ($onPath) {
-    $Bun = $onPath.Source
-    Write-Host "using bun at $Bun"
+    $Runtime = $onPath.Source
+    $RuntimeRun = @("run")
+    Write-Host "using bun at $Runtime"
 }
 elseif (Test-Path $LocalBun) {
-    $Bun = $LocalBun
-    Write-Host "using bun at $Bun"
+    $Runtime = $LocalBun
+    $RuntimeRun = @("run")
+    Write-Host "using bun at $Runtime"
+}
+elseif (Test-NodeCurrent) {
+    $Runtime = (Get-Command node).Source
+    Write-Host "using node at $Runtime"
 }
 else {
-    Write-Host "bun not found. installing bun $BunVersion into $Root\bin"
+    Write-Host "bun not found, and no node $NodeFloor+. installing bun $BunVersion into $Root\bin"
     Write-Host "this fetches and runs the official installer from bun.sh"
     $env:BUN_INSTALL = $Root
     Invoke-Expression (Invoke-RestMethod "https://bun.sh/install.ps1")
-    $Bun = $LocalBun
+    $Runtime = $LocalBun
+    $RuntimeRun = @("run")
 }
 
-if (-not (Test-Path $Bun)) {
-    Write-Error "bun is still missing after install; tried $Bun"
+if (-not (Test-Path $Runtime)) {
+    Write-Error "no usable runtime after install; tried $Runtime"
     exit 2
 }
 
-& $Bun run (Join-Path $RepoDir "scripts\setup.ts") @args
+& $Runtime @RuntimeRun (Join-Path $RepoDir "scripts\setup.ts") @args
 exit $LASTEXITCODE

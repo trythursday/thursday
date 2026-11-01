@@ -10,6 +10,7 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { cloneSource, materializeProcedures } from "./setup.ts";
+import { availableRuntimes } from "./test-helpers.ts";
 
 const setup = join(import.meta.dir, "setup.ts");
 const cleanups: (() => void)[] = [];
@@ -18,68 +19,72 @@ afterEach(() => {
   while (cleanups.length) cleanups.pop()?.();
 });
 
-function preview(source: string, expected: (home: string) => string) {
-  const home = mkdtempSync(join(tmpdir(), "thursday-setup-test-"));
-  cleanups.push(() => rmSync(home, { recursive: true, force: true }));
+// Setup is the first thing a user runs: it has to behave the same on both.
+for (const runtime of availableRuntimes()) {
+  describe(`setup · ${runtime.name}`, () => {
+    function preview(source: string, expected: (home: string) => string) {
+      const home = mkdtempSync(join(tmpdir(), "thursday-setup-test-"));
+      cleanups.push(() => rmSync(home, { recursive: true, force: true }));
 
-  const root = join(home, "install");
-  const result = Bun.spawnSync(
-    [
-      process.execPath,
-      "run",
-      setup,
-      "--home",
-      home,
-      "--root",
-      root,
-      "--personal",
-      join(home, "personal"),
-      "--skills-dir",
-      join(home, "skills"),
-      "--from",
-      source,
-      "--yes",
-      "--dry-run",
-      "--json",
-    ],
-    {
-      cwd: home,
-      env: {
-        PATH: process.env.PATH ?? "",
-        HOME: home,
-        USERPROFILE: home,
-        LOCALAPPDATA: join(home, "appdata"),
-        XDG_DATA_HOME: join(home, "data"),
-      },
-    },
-  );
+      const root = join(home, "install");
+      const result = Bun.spawnSync(
+        [
+          runtime.command,
+          ...runtime.run,
+          setup,
+          "--home",
+          home,
+          "--root",
+          root,
+          "--personal",
+          join(home, "personal"),
+          "--skills-dir",
+          join(home, "skills"),
+          "--from",
+          source,
+          "--yes",
+          "--dry-run",
+          "--json",
+        ],
+        {
+          cwd: home,
+          env: {
+            PATH: process.env.PATH ?? "",
+            HOME: home,
+            USERPROFILE: home,
+            LOCALAPPDATA: join(home, "appdata"),
+            XDG_DATA_HOME: join(home, "data"),
+          },
+        },
+      );
 
-  expect(result.exitCode).toBe(0);
-  const layout = JSON.parse(new TextDecoder().decode(result.stdout));
-  expect(layout.source).toBe(expected(home));
-  expect(existsSync(root)).toBe(false);
-  expect(existsSync(join(home, "skills"))).toBe(false);
+      expect(result.exitCode).toBe(0);
+      const layout = JSON.parse(new TextDecoder().decode(result.stdout));
+      expect(layout.source).toBe(expected(home));
+      expect(existsSync(root)).toBe(false);
+      expect(existsSync(join(home, "skills"))).toBe(false);
+    }
+
+    for (const source of [
+      "https://example.com/team/thursday.git",
+      "ssh://git@example.com/team/thursday.git",
+      "file:///srv/git/thursday.git",
+      "git@example.com:team/thursday.git",
+      "github.com:team/thursday.git",
+      "example.com:team/thursday.git",
+    ]) {
+      test(`preserves remote source ${source}`, () => preview(source, () => source));
+    }
+
+    test("still resolves relative local sources", () => {
+      preview("./local-checkout", (home) => resolve(home, "local-checkout"));
+    });
+
+    test("still expands home-relative local sources", () => {
+      preview("~/local-checkout", (home) => join(home, "local-checkout"));
+    });
+  });
 }
-
-for (const source of [
-  "https://example.com/team/thursday.git",
-  "ssh://git@example.com/team/thursday.git",
-  "file:///srv/git/thursday.git",
-  "git@example.com:team/thursday.git",
-  "github.com:team/thursday.git",
-  "example.com:team/thursday.git",
-]) {
-  test(`setup preserves remote source ${source}`, () =>
-    preview(source, () => source));
-}
-
-test("setup still resolves relative local sources", () => {
-  preview("./local-checkout", (home) => resolve(home, "local-checkout"));
-});
-
-test("setup still expands home-relative local sources", () => {
-  preview("~/local-checkout", (home) => join(home, "local-checkout"));
-});
 
 describe("cloneSource", () => {
   const home = "/home/tester";

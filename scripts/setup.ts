@@ -24,8 +24,13 @@
  *     bun run scripts/setup.ts --home /tmp/fake --personal /tmp/fake/th --yes
  *     bun run scripts/setup.ts --json
  *     bun run scripts/setup.ts --undo
+ *
+ * Runs on bun, or on node 24+. Whichever one runs it is the one it records in
+ * `[install].runtime` and bakes into the generated skills.
  */
 
+import { spawn } from "node:child_process";
+import { once } from "node:events";
 import {
   copyFile,
   mkdir,
@@ -37,11 +42,13 @@ import {
 } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import { createInterface, type Interface } from "node:readline";
 import { parseArgs } from "node:util";
 import process from "node:process";
+import { runtimeCommand, tsArgs } from "./runtime.ts";
 
-const REPO = resolve(import.meta.dir, "..");
-const VERSION = "0.1.2";
+const REPO = resolve(import.meta.dirname, "..");
+const VERSION = "0.2.0";
 
 type Layout = {
   home: string;
@@ -201,7 +208,7 @@ function describe(layout: Layout) {
     state: layout.state,
     personal: layout.personal,
     skillsDirs: layout.skillsDirs,
-    bunPath: process.execPath,
+    runtime: runtimeCommand(),
     source: layout.source,
     temp: layout.temp,
   };
@@ -213,7 +220,7 @@ function configToml(layout: Layout) {
 repo = ${JSON.stringify(layout.checkout)}
 version = ${JSON.stringify(VERSION)}
 skills = ${JSON.stringify(layout.skillsDirs)}
-bun_path = ${JSON.stringify(process.execPath)}
+runtime = ${JSON.stringify(runtimeCommand())}
 platform = ${JSON.stringify(process.platform)}
 
 [personal]
@@ -233,22 +240,31 @@ lenses = false
 `;
 }
 
+let reader: Interface | undefined;
+
 async function ask(question: string, fallback: string) {
-  process.stderr.write(`${question}${fallback ? ` [${fallback}]` : ""} `);
-  const reader = Bun.stdin.stream().getReader();
-  const { value } = await reader.read();
-  reader.releaseLock();
-  const answer = new TextDecoder().decode(value ?? new Uint8Array()).trim();
-  return answer || fallback;
+  reader ??= createInterface({ input: process.stdin, output: process.stderr });
+  const rl = reader;
+  const prompt = `${question}${fallback ? ` [${fallback}]` : ""} `;
+  const answer = await new Promise<string>((resolve) => rl.question(prompt, resolve));
+  return answer.trim() || fallback;
+}
+
+/** Run a command to completion. `quiet` swallows its output. */
+async function run(command: string, args: string[], quiet = false) {
+  const proc = spawn(command, args, { stdio: quiet ? "ignore" : "inherit" });
+  const [code] = (await once(proc, "close")) as [number | null];
+  return code ?? 1;
 }
 
 async function gitRemote(repo: string) {
   try {
-    const proc = Bun.spawn(["git", "-C", repo, "remote", "get-url", "origin"], {
-      stdout: "pipe",
-      stderr: "ignore",
+    const proc = spawn("git", ["-C", repo, "remote", "get-url", "origin"], {
+      stdio: ["ignore", "pipe", "ignore"],
     });
-    const out = await new Response(proc.stdout).text();
+    let out = "";
+    for await (const chunk of proc.stdout) out += chunk;
+    await once(proc, "close");
     return out.trim();
   } catch {
     return "";
@@ -256,42 +272,30 @@ async function gitRemote(repo: string) {
 }
 
 async function cloneInto(source: string, target: string) {
-  const proc = Bun.spawn(["git", "clone", "--quiet", source, target], {
-    stdout: "inherit",
-    stderr: "inherit",
-  });
-  const code = await proc.exited;
+  const code = await run("git", ["clone", "--quiet", source, target]);
   if (code !== 0) fail(`could not clone ${source} into ${target}`, 2);
 
   // A local clone points origin at the local path. Repoint it at the real
   // remote so the checkout can be updated later.
   const origin = await gitRemote(source);
   if (origin && origin !== source) {
-    const set = Bun.spawn(
-      ["git", "-C", target, "remote", "set-url", "origin", origin],
-      { stdout: "ignore", stderr: "ignore" },
-    );
-    await set.exited;
+    await run("git", ["-C", target, "remote", "set-url", "origin", origin], true);
   }
 }
 
 async function generateSkills(checkout: string, skillsDir: string) {
   const generator = join(checkout, "scripts", "gen-th-skills.ts");
-  const proc = Bun.spawn(
-    [
-      process.execPath,
-      "run",
-      generator,
+  const code = await run(
+    process.execPath,
+    tsArgs(generator, [
       "--out",
       skillsDir,
       "--repo",
       checkout,
-      "--bun",
-      process.execPath,
-    ],
-    { stdout: "inherit", stderr: "inherit" },
+      "--runtime",
+      runtimeCommand(),
+    ]),
   );
-  const code = await proc.exited;
   if (code !== 0) fail(`skill generation failed in ${checkout}`, 2);
 }
 

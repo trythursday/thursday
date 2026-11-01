@@ -10,7 +10,7 @@ last compaction.
 
 Then resolve `025-th-log.md` and read it:
 
-    bun run <install.repo>/scripts/th-proc.ts 025-th-log.md
+    <runtime> <install.repo>/scripts/th-proc.ts 025-th-log.md
 
 It prints one path: the personal copy when there is one, the shipped copy otherwise.
 If it exits non-zero the procedure is missing — say so. Never read one from each

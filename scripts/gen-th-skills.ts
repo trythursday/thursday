@@ -21,18 +21,19 @@
  *     bun run scripts/gen-th-skills.ts thlog
  *     bun run scripts/gen-th-skills.ts --dry-run
  *     bun run scripts/gen-th-skills.ts --out ~/.commandcode/skills
- *     bun run scripts/gen-th-skills.ts --out <dir> --repo <checkout> --bun <bun>
+ *     bun run scripts/gen-th-skills.ts --out <dir> --repo <checkout> --runtime "node"
  *
- * `--repo` and `--bun` are baked into the resolver command a skill runs. Without
- * them the skill carries `<install.repo>` and `bun`, which is what the checkout
- * commits; setup passes the real paths when it installs.
+ * `--repo` and `--runtime` are baked into the resolver command a skill runs.
+ * Without them the skill carries `<install.repo>` and `<runtime>`, which is what
+ * the checkout commits; setup passes the real ones when it installs. The runtime
+ * is the interpreter from `[install].runtime` — `node`, or `bun run`.
  */
 
 import { mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, join, relative, resolve } from "node:path";
 
-const ROOT = resolve(import.meta.dir, "..");
+const ROOT = resolve(import.meta.dirname, "..");
 const PROC_DIR = join(ROOT, "procedures");
 const ROOT_SKILL = join(ROOT, ".agents", "skills", "thursday", "SKILL.md");
 const DEFAULT_OUT = join(ROOT, ".agents", "skills");
@@ -171,7 +172,7 @@ function skillName(verb: string) {
 
 type Targets = {
   repo: string;
-  bun: string;
+  runtime: string;
 };
 
 function quote(path: string) {
@@ -190,7 +191,7 @@ function body(verb: Verb, targets: Targets) {
   if (verb.procedure) {
     const file = basename(verb.procedure.file);
     const resolver = join(targets.repo, "scripts", "th-proc.ts");
-    const command = `${quote(targets.bun)} run ${quote(resolver)} ${file}`;
+    const command = `${targets.runtime} ${quote(resolver)} ${file}`;
 
     lines.push(
       "",
@@ -245,12 +246,12 @@ async function main() {
   const outDir = out ? resolve(out.replace(/^~/, homedir())) : DEFAULT_OUT;
 
   const repo = flag("--repo");
-  const bun = flag("--bun") ?? "bun";
+  const runtime = flag("--runtime") ?? "<runtime>";
   const targets = {
-    // Committed skills carry the placeholder; setup bakes the real path when it
-    // installs, so a checkout never ships someone else's home directory.
+    // Committed skills carry the placeholders; setup bakes the real values when
+    // it installs, so a checkout never ships someone else's home directory.
     repo: repo ? resolve(repo.replace(/^~/, homedir())) : "<install.repo>",
-    bun,
+    runtime,
   };
 
   const wanted = args.filter((a, i) => !a.startsWith("--") && !valued.has(i));

@@ -1,0 +1,19 @@
+{
+  "name": "thursday",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Situational-awareness-based workflows for humans.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "bun test scripts/"
+  },
+  "dependencies": {
+    "commander": "^15.0.0",
+    "markdown-to-ansi": "^1.0.0",
+    "wrap-ansi": "^10.0.2"
+  }
+}

@@ -11,7 +11,7 @@ answered in prose — say that again in the standard format, same information*
 
 Then resolve `000-th-how-to-talk.md` and read it:
 
-    bun run <install.repo>/scripts/th-proc.ts 000-th-how-to-talk.md
+    <runtime> <install.repo>/scripts/th-proc.ts 000-th-how-to-talk.md
 
 It prints one path: the personal copy when there is one, the shipped copy otherwise.
 If it exits non-zero the procedure is missing — say so. Never read one from each
