@@ -1,7 +1,7 @@
 ---
 title: Thursday
 thursday-note: Landing page
-thursday-revisit: 2026-11-05
+thursday-revisit: 2026-11-12
 ---
 
 <header>
@@ -57,7 +57,7 @@ small experiments that use generative intelligence in unconventional ways.
 
 ---
 
-Check back on 2026-11-05 if that was interesting.
+Check back on 2026-11-12 if that was interesting.
 
 <nav>
   <ul>
