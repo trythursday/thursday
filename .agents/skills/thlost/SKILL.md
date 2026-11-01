@@ -1,13 +1,13 @@
 ---
 name: thlost
-description: "/thlost · reorient — rebuild session and project state; stop everything else"
+description: "/thlost · reorient — interrupt at any time to understand what the agent is doing; rebuild session and project state; stop everything else"
 ---
 
 Load the Thursday root skill if it is not already loaded this session or since the
 last compaction.
 
-`/thlost` means **reorient**: rebuild session and project state; stop everything
-else
+`/thlost` means **reorient**: interrupt at any time to understand what the agent is
+doing; rebuild session and project state; stop everything else
 
 Then resolve `010-th-situational-awareness.md` and read it:
 

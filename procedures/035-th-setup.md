@@ -128,8 +128,11 @@ paths in the toml. Do not store `~` or `%VAR%` — they do not expand consistent
     every skill pointing at a procedure resolves through the resolver:
     `bun run <install.repo>/scripts/th-proc.ts <file>`. Exit 1 means it is
     missing. Run it once per procedure; do not check both directories by hand.
-12. **Recommend `/thlearn 5`.** One sentence. Do not explain the rest of the
-    verbs.
+12. **Close the first run.** Tell them Thursday is meant to be inobtrusive and
+    disrupt their workflow as little as possible. The only thing to remember:
+    type `/thursday` at any time — mid-session, fresh session, brand-new
+    project — then vibe like normal. After they install it: you can type
+    `/thlearn` at any time to learn more about Thursday.
 
 ## Config shape
 

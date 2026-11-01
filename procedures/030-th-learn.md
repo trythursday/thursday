@@ -7,8 +7,8 @@ verb: [/thlearn]
 ---
 
 Concept: Thursday helps the user learn it, one addressable concept at a time.
-`/thlearn` answers a question, teaches the concept they name, or gives a short
-tour — and remembers what they already know.
+`/thlearn` answers a question, teaches the concept they name, or walks them
+through a task they set — and remembers what they already know.
 
 ## Why?
 
@@ -28,8 +28,11 @@ Re-explaining is worse than not explaining. If they have seen it, skip it.
 
 - nothing · the menu. One line per concept they have not seen, grouped by what
   they are doing. Never the whole index at once
-- `5` · one concept, one example from their own work, done
-- `20` · four or five concepts, each with an example
+- `5` · a tour by doing. Ask for a small real task they want, about 5 minutes.
+  Do it with them, naming the Thursday workflows as they come up. One or two,
+  no more
+- `20` · the same, about 20 minutes. More of the workflow surfaces, still their
+  task
 - `<concept>` · that one concept, now, at any time, whether or not it was covered
 - `<verb>` · that verb's meaning, its procedure, and the one mistake people make
   with it. A verb is also a concept name, so this is the same path
@@ -83,7 +86,12 @@ procedure.
 4. The door. A procedure path, or the example file. Do not paste its contents.
 5. Stop. No summary of what was just said, no list of what is left.
 
-A lesson that needs three nodes is a tour, and a tour is `20`.
+## How a tour is shaped
+
+1. Ask for the task, and the time bound. They set both.
+2. Do it with them — real work, not a demo.
+3. Name each Thursday workflow in one line as it comes up. Do not stop to teach.
+4. Stop at the bound. Do not carry on because the task is nearly done.
 
 ## The prompt as a small DSL
 
@@ -97,6 +105,20 @@ are the command part:
 
 The format itself lives in `000-th-how-to-talk.md`. `/th` is the pointer.
 
+## Suggesting verbs
+
+While `/thlearn` is running, one of the five **FEEDBACK** items may name up to
+three verbs, so the user can try them in the moment or build a longer prompt. It
+is one item among the five, not a sub-list outside them.
+
+- pick verbs that fit what they are doing now, or that unlock a longer prompt
+- one line each: the verb, what it does, nothing else
+- three is the cap. Fewer, or none, is fine
+- never run a suggestion, and never treat it as permission — `000-th-how-to-talk.md`
+- stop suggesting a verb once they use it or decline it
+
+It is not a menu, and it does not appear outside `/thlearn`.
+
 ## Remembering
 
 - one flag per concept, in the learned sidecar under `[paths].state`. Never rewrite
@@ -107,8 +129,9 @@ The format itself lives in `000-th-how-to-talk.md`. `/th` is the pointer.
 ## Tones
 
 - `/thlearn` · the menu, unread items only
-- `/thlearn 5` · one concept, one example, done
-- `/thlearn 20` · four or five concepts, each with an example from their work
+- `/thlearn 5` · a small task they set, about 5 minutes, done with Thursday
+  workflows
+- `/thlearn 20` · the same, about 20 minutes
 - `/thlearn <concept>` · that concept, now
 - a question · the answer, then the door
 
