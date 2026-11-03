@@ -20,7 +20,8 @@ Thursday is a set of ideas
 An experiment in using generative AI in a non-chat form. Takes any goal
 and gives you some concrete steps towards getting there.
 
-[Try it](https://trythursday.org/experiments/next-steps/)
+[Try it](https://trythursday.org/experiments/next-steps/) ·
+[Source](https://github.com/trythursday/next-steps)
 
 ### The Thursday skill file
 
@@ -65,15 +66,12 @@ small experiments that use generative intelligence in unconventional ways.
 
 ### Upcoming
 
-- [Thing Refiner](./experiments/thing-refiner.jpg)
+- [Thing Refiner](https://github.com/trythursday/idea-expander/blob/main/thing-refiner.jpg)
 
 ## In this repo
 
 - `.agents/skills/` - the Thursday root skill, and one generated skill per verb
 - `procedures/` - one concept per file; each carries its own description and undo
-- `threads/` - experimental info organization system
-  - `threads/personal/` - gitignored, personal info at the relevant scope
-- `experiments/` - prototypes and ideas.
 - `scripts/` - Thursday tools, for people and machines
 
 ## License

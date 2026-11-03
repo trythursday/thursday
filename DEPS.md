@@ -28,8 +28,8 @@
   the generated skills, so an agent always invokes the resolver with the runtime
   this install actually has. Nothing has to be detected twice.
 
-- The repo's own tools stay bun-only: `home.ts` (marked `maintainer: true`),
-  `sessions-viewer.ts`, `tree-render.ts`, and `idea-finder.ts`.
+- The repo's own tools stay bun-only: `sessions-viewer.ts`, `tree-render.ts`, and
+  `idea-finder.ts`.
 
 ## npm packages
 

@@ -60,9 +60,9 @@ in one.
 - a thread can be a single file, a dir, or one line in a bigger note
 - name a thread for how the user would look for it, not for how it is structured
 
-The repo's `threads/` is the example: `threads/<thread>/`, with `threads/personal/`
-for anything about a person. The scratch tree lives at
-`threads/personal/scratch/tree.md`.
+The user's threads dir is the example: `<threads>/<thread>/`, with a `personal/`
+dir for anything about a person. A scratch tree lives at
+`<threads>/personal/scratch/tree.md`.
 
 When the user logs something, prefer an existing thread over making a new one.
 Create a new thread only when the entry would be hard to find inside any existing

@@ -6,7 +6,6 @@
  * Output: <basename>.svg         open in a browser
  *         <basename>.excalidraw  open via excalidraw.com -> Open
  *
- *   bun run scripts/tree-render.ts
  *   bun run scripts/tree-render.ts tree.md
  *   bun run scripts/tree-render.ts tree.md out/tree
  *   bun run scripts/tree-render.ts tree.md --stdout      # SVG on stdout, no files
@@ -412,10 +411,14 @@ async function main() {
   const positional = args.filter((a) => !a.startsWith("--"));
 
   const here = import.meta.dir;
-  const source = resolve(
-    positional[0] ??
-      join(here, "..", "threads", "personal", "scratch", "tree.md"),
-  );
+  const input = positional[0];
+  if (!input) {
+    console.error(
+      `usage: bun run ${join(here, "tree-render.ts")} <file.md> [out/base]`,
+    );
+    process.exit(2);
+  }
+  const source = resolve(input);
 
   let markdown: string;
   try {
