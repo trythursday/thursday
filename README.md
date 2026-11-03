@@ -74,6 +74,9 @@ small experiments that use generative intelligence in unconventional ways.
 - `procedures/` - one concept per file; each carries its own description and undo
 - `scripts/` - Thursday tools, for people and machines
 
+For bounded implementation work, see the optional [small-task profile](docs/bounded-task-profile.md).
+It uses existing procedures and keeps your configured format and approval behavior.
+
 ## License
 
 I want you to steal thursday. I ENCOURAGE you to steal thursday.
