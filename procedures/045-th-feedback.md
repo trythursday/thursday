@@ -40,6 +40,15 @@ still likes it is a tool that gets abandoned silently.
 
 Never file anything publicly without showing it to the user first.
 
+## Optional machine feedback experiment
+
+If the operator opts into measurement, use the [local feedback record](../docs/feedback-record.md)
+alongside human feedback. `bun run scripts/feedback-record.ts --template` prints
+a synthetic JSON template; `--validate` checks a record supplied on stdin.
+Use observed counters only, keep unknown values null, and distinguish the actual
+verification boundary. This neither collects sessions nor uploads records, changes
+confirmation rules, or grants publication authority. Keep records local by default.
+
 ## Check-ins
 
 Ask how Thursday itself is going on a schedule the user chose.
