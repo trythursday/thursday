@@ -70,13 +70,30 @@ for (const runtime of availableRuntimes()) {
     test("the personal copy wins", () => {
       const { code, out } = run("000-th-how-to-talk.md");
       expect(code).toBe(0);
-      expect(out).toBe(join(personal, "000-th-how-to-talk.md"));
+      expect(out).toBe("mine");
     });
 
     test("falls back to the checkout when the personal copy is absent", () => {
       const { code, out } = run("030-th-learn.md");
       expect(code).toBe(0);
-      expect(out).toBe(join(checkout, "procedures", "030-th-learn.md"));
+      expect(out).toBe("shipped");
+    });
+
+    test("--find prints the one path instead of the contents", () => {
+      expect(run("--find", "000-th-how-to-talk.md").out).toBe(
+        join(personal, "000-th-how-to-talk.md"),
+      );
+      expect(run("--find", "030-th-learn.md").out).toBe(
+        join(checkout, "procedures", "030-th-learn.md"),
+      );
+    });
+
+    test("a user procedure resolves like any other", () => {
+      writeFileSync(join(personal, "user-001-mine.md"), "theirs\n");
+      expect(run("user-001-mine.md").out).toBe("theirs");
+      expect(run("--find", "user-001-mine.md").out).toBe(
+        join(personal, "user-001-mine.md"),
+      );
     });
 
     test("--json names the source", () => {
@@ -89,6 +106,15 @@ for (const runtime of availableRuntimes()) {
 
     test("--list reports one source per name", () => {
       const { code, out } = run("--list");
+      expect(code).toBe(0);
+      expect(out.split("\n")).toEqual([
+        `000-th-how-to-talk.md\tpersonal`,
+        `030-th-learn.md\tcheckout`,
+      ]);
+    });
+
+    test("no name lists every procedure", () => {
+      const { code, out } = run();
       expect(code).toBe(0);
       expect(out.split("\n")).toEqual([
         `000-th-how-to-talk.md\tpersonal`,
@@ -109,11 +135,6 @@ for (const runtime of availableRuntimes()) {
       const { code, err } = run("../thursday.toml");
       expect(code).toBe(2);
       expect(err).toContain("not a procedure name");
-    });
-
-    test("no name is a usage error", () => {
-      const { code } = run();
-      expect(code).toBe(2);
     });
 
     test("no config is exit 2, not a guess", () => {

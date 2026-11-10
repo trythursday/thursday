@@ -50,6 +50,10 @@ aviate, navigate, communicate" tree.
     is the same failure as a diff they cannot read.
 15. Output cut off? Narrow it. One file, one symbol, one range. Never run the
     same read twice.
+16. **Report only what you checked.** Name the level: the unit, its actual caller,
+    or the deployed artifact. Do not report one as another. A passing helper test
+    is not caller integration; a passing build is not deployment. In guide coding
+    the check is the user reading the diff — say that, do not invent a run.
 
 ## Bullets, not prose
 
@@ -58,6 +62,15 @@ to hide a gap in. Prose in a response is a defect.
 
 Every section is a nested list unless it is a table or a code block. If you find
 yourself writing a paragraph, the paragraph is hiding a list.
+
+## Two caps per section
+
+At most **five bullets** in a section, and roughly **140 characters** per bullet.
+The caps are per section, not per response. Past either one, the section is
+hiding a decision — cut it, or offer the rest in **NEXT**.
+
+Tables, code blocks, and quoted user text are exempt. Their length is the user's
+or the artifact's, not yours.
 
 ## When you need something, nothing else shares the turn
 

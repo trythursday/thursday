@@ -1,17 +1,19 @@
 #!/usr/bin/env bun
 /**
- * Resolve one procedure to exactly one path.
+ * Resolve one procedure and print it.
  *
  * The personal copy wins. The checkout is the fallback for a file the personal
- * dir does not have, which after setup means it is usually not needed. Printing
- * one path is the point: an agent should never have to try both.
+ * dir does not have, which after setup means it is usually not needed. One
+ * procedure, one read: an agent should never have to try both.
  *
  *   bun run scripts/th-proc.ts 000-th-how-to-talk.md
+ *   bun run scripts/th-proc.ts --find 030-th-learn.md
  *   bun run scripts/th-proc.ts --json 030-th-learn.md
+ *   bun run scripts/th-proc.ts
  *   bun run scripts/th-proc.ts --list
  *
- * The path goes to stdout. Everything else goes to stderr, so `$(th-proc ...)`
- * pipes. Exit 1 means missing, exit 2 means Thursday is not set up.
+ * Contents go to stdout by default; `--find` prints the path instead. Everything
+ * else goes to stderr. Exit 1 means missing, exit 2 means Thursday is not set up.
  */
 
 import { existsSync } from "node:fs";
@@ -123,6 +125,7 @@ async function list(config: Config) {
 async function main() {
   const args = process.argv.slice(2);
   const json = args.includes("--json");
+  const find = args.includes("--find");
   const wantsList = args.includes("--list");
   const names = args.filter((arg) => !arg.startsWith("--"));
 
@@ -130,11 +133,14 @@ async function main() {
     console.error(
       [
         "usage: bun run scripts/th-proc.ts <file.md>",
+        "       bun run scripts/th-proc.ts --find <file.md>",
         "       bun run scripts/th-proc.ts --json <file.md>",
+        "       bun run scripts/th-proc.ts",
         "       bun run scripts/th-proc.ts --list",
         "",
         "  the personal copy wins; the checkout is the fallback",
-        "  stdout: the one path, or name<TAB>source for --list",
+        "  stdout: the procedure, or its one path with --find",
+        "  no name prints the list, same as --list",
       ].join("\n"),
     );
     return 0;
@@ -151,8 +157,8 @@ async function main() {
 
   const name = names[0];
   if (!name) {
-    console.error("name a procedure, e.g. 000-th-how-to-talk.md");
-    return 2;
+    await list(config);
+    return 0;
   }
 
   if (name.includes("/") || name.includes("\\")) {
@@ -171,8 +177,10 @@ async function main() {
 
   if (json) {
     console.log(JSON.stringify({ path: found.path, source: found.source }, null, 2));
-  } else {
+  } else if (find) {
     console.log(found.path);
+  } else {
+    process.stdout.write(await readFile(found.path, "utf8"));
   }
   return 0;
 }

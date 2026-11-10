@@ -38,8 +38,7 @@ harness's available tools to set it up for them. It may be as simple as adding
    ```sh
    <install.runtime> <install.repo>/scripts/th-proc.ts 000-th-how-to-talk.md
    ```
-   Read the path it prints. It is the personal copy. See "Where Thursday reads
-   from" if it exits non-zero.
+   Follow its output. See "Where Thursday reads from" if it exits non-zero.
 4. Check what they already know. A flag per procedure is enough: have they seen
    the `/thlearn` spiel, have they used `/thlog`, and so on. Do not explain a
    thing twice.
@@ -299,6 +298,7 @@ Read the one that applies. Do not paraphrase it into the reply.
 - `040-th-harnesses` · ignore it, and tap into it
 - `045-th-feedback` · `/thfeedback`
 - `050-th-procedures` · writing your own
+- `055-th-zone` · `/thzone`, and the agent's behavior zones
 - `060-th-lenses-intelligence` · lenses, and the intelligence ladder
 - `065-th-slop-complexity` · complexity must be earned
 - `070-th-revisit` · `/threvisit`
@@ -330,16 +330,16 @@ for a file the personal dir does not have, and it is never the workspace:
 
 - never write the user's state, notes, or scratch into the checkout
 
-Resolve a procedure to one path with the resolver. Never read one from each place:
+Resolve a procedure with the resolver. Never read one from each place:
 
 ```sh
 <install.runtime> <install.repo>/scripts/th-proc.ts 000-th-how-to-talk.md
 ```
 
 `<install.runtime>` is the interpreter recorded in the config — the node or the
-bun that ran setup, whichever it was. It prints exactly one path on stdout: the
-personal copy when there is one, the shipped copy otherwise. Exit 1 means the
-procedure does not exist — say so.
+bun that ran setup, whichever it was. It prints the procedure on stdout: the
+personal copy when there is one, the shipped copy otherwise. `--find` prints the
+path instead. Exit 1 means the procedure does not exist — say so.
 
 If the config is missing, the user has not set up a Thursday dir. Point them at
 `035-th-setup.md`; until they do, the checkout is the only copy and reading from
