@@ -143,7 +143,7 @@ paths in the toml. Do not store `~` or `%VAR%` — they do not expand consistent
 # resolved per platform — see "Resolve paths first"
 [install]
 repo = "/home/sid/.local/share/thursday/checkout"
-version = "0.2.0"
+version = "0.3.0"
 skills = [
   "/home/sid/.commandcode/skills",
   "/home/sid/.config/opencode/skills",

@@ -50,7 +50,7 @@ import process from "node:process";
 import { runtimeCommand, tsArgs } from "./runtime.ts";
 
 const REPO = resolve(import.meta.dirname, "..");
-const VERSION = "0.2.0";
+const VERSION = "0.3.0";
 
 type Layout = {
   home: string;
